@@ -44,9 +44,6 @@ jobs:
       - name: Check Windows and Linux automation parity
         run: ./bin/check-ops-parity.sh
 
-      - name: Audit Ruby dependencies
-        run: bundle exec bundler-audit check --update
-
       - name: Scan Rails application security
         run: bundle exec brakeman --no-pager --no-color --quiet
 
@@ -69,3 +66,24 @@ jobs:
           bash -n bin/public-preview-status.sh
           bash -n bin/ensure-public-preview.sh
           bash -n bin/install-public-preview-monitor.sh
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      # An advisory should stay loud but must not gate the rest of CI: every
+      # earlier green run on record was red only here, so bundler-audit hid the
+      # test suite for months. As its own job it reports independently of tests,
+      # parity, and the security scanner.
+      - name: Audit Ruby dependencies
+        run: bundle exec bundler-audit check --update
