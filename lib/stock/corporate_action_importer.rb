@@ -16,6 +16,15 @@ module Stock
     def call(stocks, budget: nil)
       stocks = Array(stocks).uniq.sort
       report = Report.new(stocks: stocks.size, events: 0, stored: 0, failures: {}, anomalies: [])
+
+      # A stock that does not belong to this market would be read from the
+      # wrong .day directory -- and the file is not there, so its factors
+      # would come out as 1.0 and be stored under the wrong market. Such a
+      # stock is refused rather than stored.
+      mismatched = stocks.reject { |stock| stock.start_with?(@area) }
+      stocks -= mismatched
+      failures = mismatched.to_h { |stock| [stock, "does not belong to the #{@area} market"] }
+      report = report.with(failures: failures)
       return report if stocks.empty?
 
       deadline = budget ? Time.now + budget : nil
@@ -24,7 +33,7 @@ module Stock
       rescue CorporateActionFetcher::NoServerAvailable => error
         # Not one server would answer. Nothing was fetched, so nothing is
         # written and every stock is reported as unanswered.
-        return report.with(failures: stocks.to_h { |stock| [stock, error.message] })
+        return report.with(failures: failures.merge(stocks.to_h { |stock| [stock, error.message] }))
       end
 
       rebuilt = CorporateActionRebuilder.new(area: @area, events_by_stock: result.events)
@@ -33,7 +42,7 @@ module Stock
       report.with(
         events: rebuilt.events,
         stored: rebuilt.stored,
-        failures: result.failures,
+        failures: failures.merge(result.failures),
         anomalies: rebuilt.anomalies
       )
     end
