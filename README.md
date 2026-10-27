@@ -94,11 +94,16 @@ report drops the holding periods that cover a flagged day; the simulated
 account keeps the trade but reports how many of its trades were affected,
 because an account cannot un-buy a position.
 
-The factors are derived from the local price history, so they are re-derived
-whenever that history changes:
+The factors depend on the local price history and on the records the quote
+servers hold, so the nightly refresh fetches the records again and re-derives
+them. The fetch is given a time budget, so a quote server that stops
+answering cannot hold the refresh open; when no server answers, the factors
+are rebuilt from the records already stored instead. Both steps can also be
+run by hand:
 
 ```powershell
-bundle exec rails corporate_actions_rebuild      # all markets
+bundle exec rails corporate_actions_refresh      # fetch and store
+bundle exec rails corporate_actions_rebuild      # re-derive from what is stored
 bundle exec rails corporate_actions_status
 ```
 

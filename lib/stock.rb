@@ -15,6 +15,10 @@ module Stock
   # data-format detail, not the same thing as the unrelated STAVE
   # moving-average window even though both numerically equal 100 today.
   PRICE_SCALE = 100
+  # How long the nightly refresh may spend fetching ex-rights records from the
+  # quote servers. The fetch normally takes a few minutes; the budget stops a
+  # server that stops answering from holding the refresh open.
+  CORPORATE_ACTION_FETCH_BUDGET = 900
 
   def self.data_root
     default_root = if RUBY_PLATFORM.include?("linux")

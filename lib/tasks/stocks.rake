@@ -257,19 +257,35 @@ task daily_refresh: :environment do
       stored = StockSignalSnapshot.group(:area).count
       puts "Daily refresh complete. Captured rows: #{captured.sort.to_h.inspect}. Stored history rows: #{stored.sort.to_h.inspect}"
 
-      # The adjustment factors and the flagged days are derived from the local
-      # price history, which the download has just refreshed, so they are
-      # re-derived here. A failure here is not a refresh failure: the market
-      # data is current either way, and factors that lag by a day only mean a
-      # dividend reads as a loss for a day.
-      begin
-        Stock::AREAS.each do |area|
-          stocks = Stock::CorporateActionRebuilder.measured_stocks(area)
-          rebuilt = Stock::CorporateActionRebuilder.new(area: area).call(stocks)
-          puts "#{area.upcase}: rebuilt #{rebuilt.events} corporate action(s), #{rebuilt.anomalies.size} flagged day(s)"
+      # The adjustment factors come from the TongdaXin quote servers, and a
+      # new ex-rights record appears whenever a stock goes ex-dividend, so
+      # they are fetched again here rather than only when someone remembers
+      # to. The fetch is given a time budget: a quote server that stops
+      # answering must not be able to hold the refresh open.
+      #
+      # A failure here is not a refresh failure: the market data is current
+      # either way, and factors that lag by a day only mean a dividend reads
+      # as a loss for a day. When the servers do not answer, the factors are
+      # rebuilt from the records already stored, so the local price history
+      # still governs them.
+      deadline = Time.now + Stock::CORPORATE_ACTION_FETCH_BUDGET
+      Stock::AREAS.each do |area|
+        stocks = Stock::CorporateActionImporter.measured_stocks(area)
+        imported = begin
+          Stock::CorporateActionImporter.new(area: area).call(stocks, budget: [deadline - Time.now, 0].max)
+        rescue StandardError => error
+          puts "  WARNING: #{area.upcase}: the corporate actions could not be fetched (#{error.message})"
+          nil
         end
-      rescue StandardError => error
-        puts "WARNING: could not rebuild the price adjustment factors: #{error.message}"
+
+        if imported
+          puts "#{area.upcase}: fetched #{imported.stored} corporate action(s), " \
+               "#{imported.failures.size} unanswered, #{imported.anomalies.size} flagged day(s)"
+        else
+          rebuilt = Stock::CorporateActionRebuilder.new(area: area).call(stocks)
+          puts "#{area.upcase}: rebuilt #{rebuilt.events} corporate action(s) from the stored records, " \
+               "#{rebuilt.anomalies.size} flagged day(s)"
+        end
       end
 
       Stock::AREAS.each do |area|

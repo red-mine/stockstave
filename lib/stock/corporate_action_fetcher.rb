@@ -12,6 +12,12 @@ module Stock
   # than as having no events: an empty list and a failed fetch mean different
   # things, and only the first may be stored.
   class CorporateActionFetcher
+    # Raised when no quote server would answer at all. It ends the whole
+    # fetch: the list holds servers that are down as often as not, so when
+    # none of them answers, asking again for every stock would spend hours
+    # rediscovering the same fact.
+    class NoServerAvailable < StandardError; end
+
     # The public TongdaXin quote servers on port 7709, the same list pytdx
     # ships and the event study walks through.
     SERVERS = [
@@ -63,11 +69,20 @@ module Stock
     # Returns a Result holding the price-moving records of every stock that
     # answered, keyed by stock, and the stocks that did not answer with the
     # reason.
-    def call(stocks)
+    #
+    # `deadline` bounds how long the fetch may run. A stock left over when
+    # the deadline passes is reported as a failure, the same as one the
+    # servers refused: only an answered stock may be written.
+    def call(stocks, deadline: nil)
       events = {}
       failures = {}
 
       stocks.each do |stock|
+        if deadline && Time.now >= deadline
+          failures[stock] = "the fetch ran out of time"
+          next
+        end
+
         records, error = fetch(stock)
         if records
           events[stock] = records
@@ -89,6 +104,10 @@ module Stock
           begin
             records = client.ex_rights(area, stock)
             return [records.select { |record| PRICE_CATEGORIES.include?(record[:category]) }, nil]
+          rescue NoServerAvailable
+            # No server would answer. Asking the next stock would try all of
+            # them again, so the fetch stops here.
+            raise
           rescue StandardError => failure
             # The stream may be out of step now, so it is dropped rather than
             # reused for the next stock.
@@ -114,7 +133,7 @@ module Stock
             @client = nil
           end
         end
-        raise "no TongdaXin quote server answered"
+        raise NoServerAvailable, "no TongdaXin quote server answered"
       end
 
       def disconnect

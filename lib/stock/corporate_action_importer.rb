@@ -13,12 +13,20 @@ module Stock
       @fetcher = fetcher
     end
 
-    def call(stocks)
+    def call(stocks, budget: nil)
       stocks = Array(stocks).uniq.sort
       report = Report.new(stocks: stocks.size, events: 0, stored: 0, failures: {}, anomalies: [])
       return report if stocks.empty?
 
-      result = @fetcher.call(stocks)
+      deadline = budget ? Time.now + budget : nil
+      begin
+        result = @fetcher.call(stocks, deadline: deadline)
+      rescue CorporateActionFetcher::NoServerAvailable => error
+        # Not one server would answer. Nothing was fetched, so nothing is
+        # written and every stock is reported as unanswered.
+        return report.with(failures: stocks.to_h { |stock| [stock, error.message] })
+      end
+
       rebuilt = CorporateActionRebuilder.new(area: @area, events_by_stock: result.events)
                                       .call(result.events.keys)
 
