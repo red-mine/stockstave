@@ -235,6 +235,31 @@ class StockSignalPerformanceTest < ActiveSupport::TestCase
     assert_in_delta 0.0, adjusted.cohorts.first.average_drawdown, 1e-9
   end
 
+  # The same report measured on the raw closes the signals come from. The two
+  # sides differ only in the price basis, which is what makes the difference
+  # between them the effect of the adjustment.
+  test "can measure the same report on raw closes" do
+    dates = 20.times.map { |index| Date.new(2026, 1, 1) + index }
+    dates.each_with_index do |date, index|
+      StockSignalSnapshot.create!(
+        stock: "sz000001", area: Stock::SZSTK, signal_date: date,
+        price: index < 5 ? 100.0 : 50.0,
+        year_signal: "BUY5", lohas_signal: "BUY5"
+      )
+    end
+    StockCorporateAction.create!(
+      area: Stock::SZSTK, stock: "sz000001", ex_date: dates[5],
+      category: Stock::TdxQuote::CATEGORY_EX_RIGHTS, cash: 0.0, bonus: 10.0,
+      rights: 0.0, rights_price: 0.0, resize: 0.0, factor: 2.0, fetched_at: Time.current
+    )
+
+    adjusted = Stock::SignalPerformance.new(Stock::SZSTK, horizon: 5, adjusted: true).call
+    raw = Stock::SignalPerformance.new(Stock::SZSTK, horizon: 5, adjusted: false).call
+
+    assert_in_delta 0.0, adjusted.cohorts.first.average_return, 1e-9
+    assert_operator raw.cohorts.first.average_return, :<, -10.0
+  end
+
   # A day whose adjusted move no board would allow means a factor is wrong,
   # so the return across it is not a number anyone should act on. The event
   # study drops the same windows.

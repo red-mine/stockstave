@@ -28,13 +28,18 @@ module Stock
 
     def initialize(area, starting_cash: STARTING_CASH, max_hold_days: MAX_HOLD_DAYS,
                    max_positions: MAX_POSITIONS, buy_cost_rate: BUY_COST_RATE, sell_cost_rate: SELL_COST_RATE,
-                   sizing: :equal)
+                   sizing: :equal, adjusted: true)
       @area = area
       @starting_cash = starting_cash.to_f
       @max_hold_days = max_hold_days
       @max_positions = max_positions
       @buy_cost_rate = buy_cost_rate
       @sell_cost_rate = sell_cost_rate
+      # Measuring on raw closes is a diagnostic, not a second opinion: it
+      # shows what the adjustment changed, by running everything else the
+      # same way. The simulation the app publishes always measures on adjusted
+      # prices.
+      @adjusted = adjusted
       raise ArgumentError, "Unknown sizing mode: #{sizing.inspect}" unless SIZING_MODES.include?(sizing)
 
       @sizing = sizing
@@ -52,7 +57,11 @@ module Stock
       # dividend- and split-adjusted closes, the same prices the event study
       # measures on. The signals that fill the account still come from the
       # raw close.
-      @factors = PriceAdjustment.factors_for(@area, snapshots_by_date.values.flat_map(&:keys).uniq)
+      @factors = if @adjusted
+        PriceAdjustment.factors_for(@area, snapshots_by_date.values.flat_map(&:keys).uniq)
+      else
+        PriceAdjustment::Factors.new([])
+      end
       @anomalies = PriceAnomalies.for(@area)
       @anomalous_trades = 0
 

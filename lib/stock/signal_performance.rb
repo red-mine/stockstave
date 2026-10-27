@@ -15,9 +15,14 @@ module Stock
     )
     Baseline = Data.define(:average_return, :dates, :sample_size)
 
-    def initialize(area, horizon: 5)
+    def initialize(area, horizon: 5, adjusted: true)
       @area = area
       @horizon = horizon
+      # Measuring on raw closes is a diagnostic, not a second opinion: it
+      # shows what the adjustment changed, by running everything else the
+      # same way. The report the app publishes always measures on adjusted
+      # prices.
+      @adjusted = adjusted
     end
 
     def call(signal_type: :buy, group_by_trend: false)
@@ -33,7 +38,11 @@ module Stock
       # prices it works from are the dividend- and split-adjusted ones -- the
       # same prices the event study measures on. The signal itself was, and
       # still is, derived from the raw close.
-      factors = PriceAdjustment.factors_for(@area, by_date.values.flat_map(&:keys).uniq)
+      factors = if @adjusted
+        PriceAdjustment.factors_for(@area, by_date.values.flat_map(&:keys).uniq)
+      else
+        PriceAdjustment::Factors.new([])
+      end
       anomalies = PriceAnomalies.for(@area)
 
       outcomes = forward_outcomes(by_date, dates, factors, anomalies)

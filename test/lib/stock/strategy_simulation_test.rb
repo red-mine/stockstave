@@ -263,6 +263,27 @@ class StockStrategySimulationTest < ActiveSupport::TestCase
     assert_equal 0.0, trade.return_pct
   end
 
+  # The same account measured on the raw closes the signals come from.
+  test "can simulate the same account on raw closes" do
+    dates = 22.times.map { |index| Date.new(2026, 1, 1) + index }
+    dates.each_with_index do |date, index|
+      signals = index.zero? ? ["BUY5", "BUY5"] : ["WAT9", "WAT9"]
+      snapshot(stock: "sz000001", date: date, price: index < 3 ? 10.0 : 5.0,
+                             year_signal: signals[0], lohas_signal: signals[1])
+    end
+    StockCorporateAction.create!(
+      area: Stock::SZSTK, stock: "sz000001", ex_date: dates[3],
+      category: Stock::TdxQuote::CATEGORY_EX_RIGHTS, cash: 0.0, bonus: 10.0,
+      rights: 0.0, rights_price: 0.0, resize: 0.0, factor: 2.0, fetched_at: Time.current
+    )
+
+    adjusted = Stock::StrategySimulation.new(Stock::SZSTK, buy_cost_rate: 0.0, sell_cost_rate: 0.0, adjusted: true).call
+    raw = Stock::StrategySimulation.new(Stock::SZSTK, buy_cost_rate: 0.0, sell_cost_rate: 0.0, adjusted: false).call
+
+    assert_equal 0.0, adjusted.trades.first.return_pct
+    assert_operator raw.trades.first.return_pct, :<, -40.0
+  end
+
   # An account cannot un-buy a position, so a trade that covers a flagged day
   # is kept but counted: the number is reported rather than hidden.
   test "counts the trades whose holding period covers a flagged day" do

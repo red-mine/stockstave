@@ -112,6 +112,16 @@ of them actually move a price, and how many days are flagged. The report page
 states which price basis it used, so a number measured on raw prices is never
 read as one measured on adjusted prices.
 
+To see what the adjustment changed, the same report can be measured on both
+price bases and set side by side:
+
+```powershell
+bundle exec rails "price_adjustment_impact[docs/price_adjustment_impact.md]"
+```
+
+Both sides come from the same code and differ only in the price basis. The
+committed report is the one under `docs/price_adjustment_impact.md`.
+
 ## Generate analysis data
 
 For normal daily operation, run:
