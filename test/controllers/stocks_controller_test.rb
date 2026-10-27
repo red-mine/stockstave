@@ -700,15 +700,19 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".history-state.is-ready", count: 1
     assert_select ".history-state.is-collecting", count: 2
+    # The measurement caliber is known before any result exists, so it shows
+    # even while the report is still collecting.
+    assert_select ".method-note", text: /model pool of the same day/
   end
 
   test "signal history displays qualified forward performance with warnings" do
     cohort = Stock::SignalPerformance::Cohort.new(
       year_signal: "BUY5", lohas_signal: "BUY5", sample_size: 75,
       win_rate: 60.0, average_return: 1.2, average_drawdown: -2.1,
-      trend_group: nil
+      trend_group: nil, baseline_return: 2.5, excess_return: -1.3, excess_dates: 14
     )
-    report = Stock::SignalPerformance::Report.new(ready: true, dates: 20, horizon: 5, cohorts: [cohort])
+    baseline = Stock::SignalPerformance::Baseline.new(average_return: 2.5, dates: 14, sample_size: 300)
+    report = Stock::SignalPerformance::Report.new(ready: true, dates: 20, horizon: 5, cohorts: [cohort], baseline: baseline)
 
     Stock::SignalPerformance.stub(:new, ->(*) { Struct.new(:call).new(report) }) do
       get signal_history_path(area: Stock::SZSTK)
@@ -718,6 +722,29 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
     assert_select ".performance-panel", count: 1
     assert_select ".performance-card", text: /BUY5 \+ BUY5.*75.*60.0%.*1.2%.*-2.1%/m
     assert_select ".performance-warning", text: /not a forecast.*transaction costs are not yet deducted/
+  end
+
+  # The absolute return says whether the stocks went up; the excess says
+  # whether the signal chose them better than the pool it could have picked
+  # from. Showing one without the other is how a rising market reads as a
+  # working strategy.
+  test "signal history shows the excess against the model pool" do
+    cohort = Stock::SignalPerformance::Cohort.new(
+      year_signal: "BUY5", lohas_signal: "BUY5", sample_size: 70,
+      win_rate: 60.0, average_return: 10.41, average_drawdown: -2.1,
+      trend_group: nil, baseline_return: 16.11, excess_return: -5.7, excess_dates: 14
+    )
+    baseline = Stock::SignalPerformance::Baseline.new(average_return: 16.11, dates: 14, sample_size: 300)
+    report = Stock::SignalPerformance::Report.new(ready: true, dates: 20, horizon: 5, cohorts: [cohort], baseline: baseline)
+
+    Stock::SignalPerformance.stub(:new, ->(*) { Struct.new(:call).new(report) }) do
+      get signal_history_path(area: Stock::SZSTK)
+    end
+
+    assert_response :success
+    assert_select ".performance-card", text: /Model pool.*16.11%/m
+    assert_select ".performance-card", text: /BUY5 \+ BUY5.*Pool return.*16.11%.*Excess vs pool.*-5.7%/m
+    assert_select ".method-note", text: /model pool of the same day/
   end
 
   test "signal history shows the strategy simulation with a benchmark comparison" do

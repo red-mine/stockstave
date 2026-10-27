@@ -358,7 +358,9 @@ task :backtest, [:area] => :environment do |_task, args|
       report.cohorts.each do |cohort|
         label = "#{cohort.year_signal} + #{cohort.lohas_signal}"
         label += " [#{cohort.trend_group}]" if cohort.trend_group
-        puts "    #{label.ljust(20)} n=#{cohort.sample_size.to_s.ljust(4)} win=#{cohort.win_rate.to_s.rjust(5)}%  avg_ret=#{cohort.average_return.to_s.rjust(7)}%  avg_dd=#{cohort.average_drawdown.to_s.rjust(7)}%"
+        excess = cohort.excess_return ? "#{cohort.excess_return}%".rjust(8) : "     n/a"
+        pool = cohort.baseline_return ? "#{cohort.baseline_return}%".rjust(8) : "     n/a"
+        puts "    #{label.ljust(20)} n=#{cohort.sample_size.to_s.ljust(4)} win=#{cohort.win_rate.to_s.rjust(5)}%  avg_ret=#{cohort.average_return.to_s.rjust(7)}%  avg_dd=#{cohort.average_drawdown.to_s.rjust(7)}%  pool=#{pool}  excess=#{excess}"
       end
     end
   end
@@ -366,6 +368,7 @@ task :backtest, [:area] => :environment do |_task, args|
   puts "\n" + "=" * 60
   puts "Note: Returns are not annualized. Transaction costs are not deducted."
   puts "      Overlapping holding periods are included in the sample."
+  puts "      Entry is the close after the signal date; excess is against the model pool of the same day."
 end
 
 desc "Simulate following the buy/sell recommendation (equal vs. grid position sizing)"

@@ -7,6 +7,8 @@
     <p class="subtitle">Daily snapshots preserve what the model actually knew at the time. This prevents future performance reports from accidentally using information from the future.</p>
   </header>
 
+  <p class="performance-warning method-note">Outcomes are measured the way the event study measures them. Each signal is entered at the close <em>after</em> the signal date — the signal is derived from that day's close, so that close is not tradable — and is compared against the model pool of the same day: the stocks the strategy could have picked then, signal or not. Excess is the date-weighted difference between the two, so a cohort that merely rose with the market has earned nothing.</p>
+
   <section class="history-grid" aria-label="Snapshot coverage by market">
     <% @history.each do |area, status| %>
       <article class="history-card">
@@ -40,6 +42,15 @@
       </div>
       <p class="performance-warning">Historical observations are evidence, not a forecast. Overlapping holding periods are included, and transaction costs are not yet deducted.</p>
       <div class="performance-grid">
+        <% if @performance.baseline.average_return %>
+          <article class="performance-card">
+            <strong>Model pool</strong>
+            <dl>
+              <div><dt>Average return</dt><dd><%= @performance.baseline.average_return %>%</dd></div>
+              <div><dt>Trading dates</dt><dd><%= @performance.baseline.dates %></dd></div>
+            </dl>
+          </article>
+        <% end %>
         <% @performance.cohorts.each do |cohort| %>
           <article class="performance-card">
             <strong><%= cohort.year_signal %> + <%= cohort.lohas_signal %></strong>
@@ -48,6 +59,10 @@
               <div><dt>Win rate</dt><dd><%= cohort.win_rate %>%</dd></div>
               <div><dt>Average return</dt><dd><%= cohort.average_return %>%</dd></div>
               <div><dt>Average drawdown</dt><dd><%= cohort.average_drawdown %>%</dd></div>
+              <% if cohort.excess_return %>
+                <div><dt>Pool return</dt><dd><%= cohort.baseline_return %>%</dd></div>
+                <div><dt>Excess vs pool</dt><dd><%= cohort.excess_return %>%</dd></div>
+              <% end %>
             </dl>
           </article>
         <% end %>

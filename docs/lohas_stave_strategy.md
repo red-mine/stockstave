@@ -182,7 +182,7 @@ signal-code bug above:
    uptrends" is implemented as `coef >= 1.0 / STAVE` (0.01 yuan a day) plus the 100-yuan
    price cap. Over 2021–2026, the stocks that pass it trailed the equal-weighted A-share
    market by about 2.9% per 60 trading days on the 3.5-year window and 1.5% on the
-   1.4-year (350-day) year window, before any signal is applied ([event study](event_study.md),
+   1-year (250-day) year window, before any signal is applied ([event study](event_study.md),
    sections 1 and 10). On the 3.5-year window the cost comes from the trend itself
    (long-horizon reversal): picking the same number of stocks by log-price slope does
    worse, not better. On the year window more of it comes from the yuan-per-day
@@ -191,3 +191,26 @@ signal-code bug above:
    and only the year-window buy-minus-sell spread does. Treat the signals as a
    description of where price sits in its band, not as evidence that a buy will beat
    the alternatives.
+
+4. **The app's performance report shares the event study's method but not its
+   prices.** `Stock::SignalPerformance` enters at the close *after* the signal
+   date and judges every cohort against the model pool of the same day — the
+   stocks the strategy could have picked then, signal or not — with the excess
+   weighted by date, exactly as the study does. Three differences remain:
+
+   - **Price basis.** The app measures on raw TongdaXin closes; the study
+     measured on dividend- and split-adjusted closes. A holding period that
+     spans an ex-dividend date shows a price drop here that a shareholder did
+     not actually suffer. The local TongdaXin install holds only `.day` files,
+     so reproducing the study's prices means fetching ex-rights records from
+     the TongdaXin quote servers, the way
+     `research/event_study/fetch_xdxr.py` does.
+   - **Model pool.** The app's snapshot records a stock only when it has both a
+     3.5-year and a 1-year model, so its pool is the intersection of the two
+     horizons; the study used each window's own universe. The app's pool is
+     therefore smaller than either study baseline.
+   - **Minimum pool size.** A baseline needs at least 20 stocks to mean
+     anything, so days with a thinner pool drop out of the excess figure and
+     the page falls back to the absolute numbers alone. On the Beijing market,
+     where the pool is a handful of stocks, there is usually no baseline to
+     show at all.

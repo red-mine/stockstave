@@ -81,10 +81,14 @@ bundle exec rails backtest[sh]
 bundle exec rails simulate_strategy[sz]   # 等权 vs 网格仓位对比
 ```
 
-`simulate_strategy` 会同时跑等权和网格两种仓位模式并打印对比（收益、回撤、
-胜率、以及网格仓位按深度的分布）。网格按建仓当天的五线谱档位加权：跌破
--2SD 悲观线（档位 -3）权重 2.0，-1SD ~ -2SD 之间（档位 -2）权重 1.5，其余 1.0。
-指定单一模式可以看到每日权益曲线，例如 `bundle exec rails "simulate_strategy[sz,grid]"`。
+`backtest` 每个信号族会同时打印绝对收益和**相对当日模型池的超额收益**：
+信号在信号日收盘之后的第一个收盘价入场，基线是当天所有有模型的股票（无论
+有没有出信号）的同期平均收益，两者按交易日等权相减。所以"只是跟着大盘涨了"
+的信号族，超额会接近零甚至为负。`simulate_strategy` 会同时跑等权和网格两种
+仓位模式并打印对比（收益、回撤、胜率、以及网格仓位按深度的分布）。网格按建仓
+当天的五线谱档位加权：跌破 -2SD 悲观线（档位 -3）权重 2.0，-1SD ~ -2SD 之间
+（档位 -2）权重 1.5，其余 1.0。指定单一模式可以看到每日权益曲线，例如
+`bundle exec rails "simulate_strategy[sz,grid]"`。
 
 ## 定时自动运行（Windows）
 

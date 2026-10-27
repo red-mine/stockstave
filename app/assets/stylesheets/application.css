@@ -209,6 +209,7 @@ a { color: var(--teal-dark); }
 .performance-heading h2 { margin: 0; color: var(--navy); font-size: 1.3rem; }
 .performance-heading > span { color: var(--muted); font-size: 0.72rem; }
 .performance-warning { margin: 10px 0 18px; color: var(--muted); font-size: 0.75rem; line-height: 1.5; }
+.method-note { max-width: 860px; }
 .performance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .performance-card { padding: 17px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
 .performance-card > strong { color: var(--navy); }
