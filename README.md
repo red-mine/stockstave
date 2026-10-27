@@ -107,8 +107,12 @@ pwsh -File bin\install-daily-refresh-task.ps1
 ```
 
 The task downloads and validates the latest official TongdaXin day archive,
-runs against the isolated UI database at `tmp/ui-stock.sqlite3`, uses
-the Ruby 3.4 executable explicitly, starts missed runs when the computer becomes
+refreshes the tracked database, and then mirrors that database over the
+isolated UI database at `tmp/ui-stock.sqlite3` that the public preview
+serves — nothing else writes that file, so without the mirror the public
+site would keep serving whatever the preview database held when it was
+seeded. The task uses the Ruby 3.4 executable explicitly, starts missed runs
+when the computer becomes
 available, and refuses overlapping executions. Its latest output is saved to
 `log/daily-refresh/latest.log`. Timestamped logs are retained for the latest 30
 runs so failures can be audited later. Every run identifies its source in
@@ -356,7 +360,10 @@ pwsh -File bin\start-public-preview.ps1
 
 The command stops only verified Stock Stave Rails and Cloudflare processes,
 uses `tmp/ui-stock.sqlite3`, checks both local and public HTTP responses, and
-writes the current URL, port, and process IDs to `tmp/public-preview.json`. Status
+writes the current URL, port, and process IDs to `tmp/public-preview.json`. The
+preview database is kept current by the refresh runner, which mirrors the
+tracked database over it after every successful run
+(`rails mirror_preview_database` does the same thing by hand). Status
 checks and recovery reuse that recorded port. Quick
 Tunnel URLs are temporary and may change when this command is run again. The
 startup is atomically locked, so a scheduled recovery cannot race a manual

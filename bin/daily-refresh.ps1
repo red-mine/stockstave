@@ -73,6 +73,16 @@ try {
   if ($LASTEXITCODE -ne 0) {
     throw "Daily refresh failed with exit code $LASTEXITCODE"
   }
+  # The public preview serves an isolated database copy that nothing else
+  # writes, so without this mirror the public site keeps serving whatever
+  # that copy held when it was seeded. A mirror failure is not a refresh
+  # failure: the data is current either way, so it is logged loudly and the
+  # run still counts as successful.
+  & $RubyPath bin\rails mirror_preview_database 2>&1 | Tee-Object -FilePath $logFile -Append
+  if ($LASTEXITCODE -ne 0) {
+    "[$(Get-Date -Format o)] WARNING: could not mirror the public preview database; the public site may serve stale data" |
+      Tee-Object -FilePath $logFile -Append
+  }
   "[$(Get-Date -Format o)] Daily refresh succeeded" | Tee-Object -FilePath $logFile -Append
 } catch {
   "[$(Get-Date -Format o)] $($_.Exception.Message)" | Tee-Object -FilePath $logFile -Append

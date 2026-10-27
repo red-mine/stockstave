@@ -90,6 +90,12 @@ bundle exec rails simulate_strategy[sz]   # 等权 vs 网格仓位对比
 （档位 -2）权重 1.5，其余 1.0。指定单一模式可以看到每日权益曲线，例如
 `bundle exec rails "simulate_strategy[sz,grid]"`。
 
+## 公网预览的数据同步
+
+公网站点读的是 `tmp/ui-stock.sqlite3`，这个文件没有别的程序会写。刷新脚本在
+`daily_refresh` 成功后会自动把主库镜像过去（`rails mirror_preview_database`
+是同一个动作的手动版本），镜像失败只记警告、不影响刷新本身的成功状态。
+
 ## 定时自动运行（Windows）
 
 以 PowerShell 安装每日 20:30 运行的任务计划：

@@ -129,6 +129,17 @@ status="${PIPESTATUS[0]}"
 set -e
 
 if [[ "$status" -eq 0 ]]; then
+  # The public preview serves an isolated database copy that nothing else
+  # writes, so without this mirror the public site keeps serving whatever
+  # that copy held when it was seeded. A mirror failure is not a refresh
+  # failure: the data is current either way, so it is logged loudly and the
+  # run still counts as successful.
+  "$RUBY_BIN" bin/rails mirror_preview_database 2>&1 | tee -a "$LOG_FILE"
+  mirror_status="${PIPESTATUS[0]}"
+  set -e
+  if [[ "$mirror_status" -ne 0 ]]; then
+    echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] WARNING: could not mirror the public preview database; the public site may serve stale data" | tee -a "$LOG_FILE"
+  fi
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Daily refresh succeeded" | tee -a "$LOG_FILE"
 else
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Daily refresh failed with exit code $status" | tee -a "$LOG_FILE"

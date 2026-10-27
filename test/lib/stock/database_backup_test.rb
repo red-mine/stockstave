@@ -53,4 +53,44 @@ class DatabaseBackupTest < ActiveSupport::TestCase
       assert File.file?(File.join(directory, "ui-before-manual.sqlite3"))
     end
   end
+
+  # The public preview serves tmp/ui-stock.sqlite3 while a server holds that
+  # file open. Replacing the file is not an option on Windows, so the mirror
+  # writes through the destination's own handle instead.
+  test "mirrors over an existing database in place" do
+    Dir.mktmpdir do |directory|
+      source_path = File.join(directory, "source.sqlite3")
+      target_path = File.join(directory, "ui-stock.sqlite3")
+      source = SQLite3::Database.new(source_path)
+      source.execute("CREATE TABLE observations (value TEXT NOT NULL)")
+      source.execute("INSERT INTO observations (value) VALUES (?)", ["fresh"])
+
+      target = SQLite3::Database.new(target_path)
+      target.execute("CREATE TABLE observations (value TEXT NOT NULL)")
+      target.execute("INSERT INTO observations (value) VALUES (?)", ["stale"])
+      target.close
+
+      connection = Struct.new(:raw_connection).new(source)
+      Stock::DatabaseBackup.new(connection: connection).mirror_into(target_path)
+
+      mirrored = SQLite3::Database.new(target_path)
+      assert_equal [["fresh"]], mirrored.execute("SELECT value FROM observations")
+      assert_equal "ok", mirrored.get_first_value("PRAGMA integrity_check")
+      mirrored.close
+    ensure
+      source&.close
+    end
+  end
+
+  test "refuses to mirror over a database that does not exist" do
+    Dir.mktmpdir do |directory|
+      missing = File.join(directory, "ui-stock.sqlite3")
+
+      error = assert_raises(Errno::ENOENT) do
+        Stock::DatabaseBackup.new.mirror_into(missing)
+      end
+
+      assert_includes error.message, missing
+    end
+  end
 end

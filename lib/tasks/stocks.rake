@@ -94,6 +94,18 @@ task database_backup: :environment do
   end
 end
 
+desc "Mirror the active database over the public preview's isolated database"
+task mirror_preview_database: :environment do
+  target = Rails.root.join("tmp", "ui-stock.sqlite3")
+  unless target.file?
+    puts "No public preview database at #{target}; nothing to mirror."
+    next
+  end
+
+  Stock::DatabaseBackup.new.mirror_into(target.to_s)
+  puts "Mirrored the active database into #{target}"
+end
+
 desc "Refresh analysis data for all markets (or a selected market list)"
 task :refresh, [:area1, :area2, :area3] => :environment do |_task, args|
   supported_areas = Stock::AREAS
