@@ -43,6 +43,11 @@ class StocksController < ApplicationController
     @area = stock_area
     @performance = Stock::SignalPerformance.new(@area).call
     @simulation = Stock::StrategySimulation.new(@area).call
+    # The returns above are measured on adjusted prices when the corporate
+    # actions that adjust them are loaded, and on raw prices when they are
+    # not. The page says which, so a number is never read as something it is
+    # not.
+    @price_basis = Stock::PriceAdjustment.basis_for(@area)
     if @simulation.ready
       @simulation_days = simulation_daily_rows(@simulation)
       @benchmark = Stock::IndexBenchmark.new(@area, @simulation.equity_curve.map(&:date)).call

@@ -238,4 +238,47 @@ class StockStrategySimulationTest < ActiveSupport::TestCase
     refute result.ready
     assert_equal Stock::StrategySimulation::MINIMUM_DATES - 1, result.dates
   end
+
+  # The account is measured on the prices a shareholder would have seen: a
+  # ten-for-ten bonus halves the quote and doubles what the share is worth.
+  test "books the return a shareholder would have seen across an ex-rights date" do
+    dates = 22.times.map { |index| Date.new(2026, 1, 1) + index }
+    dates.each_with_index do |date, index|
+      signals = index.zero? ? ["BUY5", "BUY5"] : ["WAT9", "WAT9"]
+      snapshot(stock: "sz000001", date: date, price: index < 3 ? 10.0 : 5.0,
+                             year_signal: signals[0], lohas_signal: signals[1])
+    end
+    StockCorporateAction.create!(
+      area: Stock::SZSTK, stock: "sz000001", ex_date: dates[3],
+      category: Stock::TdxQuote::CATEGORY_EX_RIGHTS, cash: 0.0, bonus: 10.0,
+      rights: 0.0, rights_price: 0.0, resize: 0.0, factor: 2.0, fetched_at: Time.current
+    )
+
+    result = Stock::StrategySimulation.new(Stock::SZSTK, buy_cost_rate: 0.0, sell_cost_rate: 0.0).call
+
+    trade = result.trades.first
+    assert_equal dates[1], trade.entry_date
+    assert_in_delta 10.0, trade.entry_price, 1e-9
+    assert_in_delta 10.0, trade.exit_price, 1e-9
+    assert_equal 0.0, trade.return_pct
+  end
+
+  # An account cannot un-buy a position, so a trade that covers a flagged day
+  # is kept but counted: the number is reported rather than hidden.
+  test "counts the trades whose holding period covers a flagged day" do
+    dates = 22.times.map { |index| Date.new(2026, 1, 1) + index }
+    dates.each_with_index do |date, index|
+      signals = index.zero? ? ["BUY5", "BUY5"] : ["WAT9", "WAT9"]
+      snapshot(stock: "sz000001", date: date, price: 10.0, year_signal: signals[0], lohas_signal: signals[1])
+    end
+    StockPriceAnomaly.create!(
+      area: Stock::SZSTK, stock: "sz000001", date: dates[5],
+      change_pct: -50.0, limit_pct: 10.5, detected_at: Time.current
+    )
+
+    result = Stock::StrategySimulation.new(Stock::SZSTK).call
+
+    assert_equal 1, result.trades.size
+    assert_equal 1, result.anomalous_trades
+  end
 end

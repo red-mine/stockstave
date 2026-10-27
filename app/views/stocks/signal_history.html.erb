@@ -7,7 +7,13 @@
     <p class="subtitle">Daily snapshots preserve what the model actually knew at the time. This prevents future performance reports from accidentally using information from the future.</p>
   </header>
 
-  <p class="performance-warning method-note">Outcomes are measured the way the event study measures them. Each signal is entered at the close <em>after</em> the signal date — the signal is derived from that day's close, so that close is not tradable — and is compared against the model pool of the same day: the stocks the strategy could have picked then, signal or not. Excess is the date-weighted difference between the two, so a cohort that merely rose with the market has earned nothing.</p>
+  <p class="performance-warning method-note">Outcomes are measured the way the event study measures them. Each signal is entered at the close <em>after</em> the signal date — the signal is derived from that day's close, so that close is not tradable — and is compared against the model pool of the same day: the stocks the strategy could have picked then, signal or not. Excess is the date-weighted difference between the two, so a cohort that merely rose with the market has earned nothing.
+    <% if @price_basis == :adjusted %>
+      Returns are measured on dividend- and split-adjusted closes — the prices a shareholder would actually have seen — so a dividend or a bonus share no longer reads as a loss. The signals themselves are still derived from the raw close.
+    <% else %>
+      Returns are measured on raw closes: no corporate-action records are loaded for <%= @area.upcase %>, so a dividend or a bonus share still reads as a loss.
+    <% end %>
+  </p>
 
   <section class="history-grid" aria-label="Snapshot coverage by market">
     <% @history.each do |area, status| %>
@@ -96,7 +102,13 @@
           <dl>
             <div><dt>Trades closed</dt><dd><%= @simulation.trades.size %></dd></div>
             <div><dt>Win rate</dt><dd><%= @simulation.trades.any? ? "#{(@simulation.trades.count { |trade| trade.return_pct.positive? }.fdiv(@simulation.trades.size) * 100).round(2)}%" : "—" %></dd></div>
+            <% if @simulation.anomalous_trades.positive? %>
+              <div><dt>Flagged trades</dt><dd><%= @simulation.anomalous_trades %></dd></div>
+            <% end %>
           </dl>
+          <% if @simulation.anomalous_trades.positive? %>
+            <p><%= @simulation.anomalous_trades %> trade(s) cover a day whose adjusted move no board would allow. That day means an adjustment factor is wrong, so the return across it is reported but not trusted.</p>
+          <% end %>
         </article>
         <article class="performance-card">
           <strong>Benchmark</strong>

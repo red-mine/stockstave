@@ -192,19 +192,22 @@ signal-code bug above:
    description of where price sits in its band, not as evidence that a buy will beat
    the alternatives.
 
-4. **The app's performance report shares the event study's method but not its
+4. **The app's performance report shares the event study's method and its
    prices.** `Stock::SignalPerformance` enters at the close *after* the signal
    date and judges every cohort against the model pool of the same day — the
    stocks the strategy could have picked then, signal or not — with the excess
-   weighted by date, exactly as the study does. Three differences remain:
+   weighted by date, exactly as the study does. Returns are measured on
+   dividend- and split-adjusted closes: the app fetches the same TongdaXin
+   ex-rights records the study did (`Stock::TdxQuote` speaks the quote-server
+   protocol directly, so the nightly refresh needs no Python runtime), stores
+   them in `stock_corporate_actions`, and derives the same back-adjustment
+   factor the study's `adjust()` derives — the two agree to the last bit on
+   every stock that was checked against each other. The app derives the factor
+   over each stock's whole listed history while the study starts its series in
+   2020, so the two factors differ by a constant per stock; returns are ratios,
+   so they are the same. Signals are still derived from the raw close, exactly
+   as in the study. Three differences remain:
 
-   - **Price basis.** The app measures on raw TongdaXin closes; the study
-     measured on dividend- and split-adjusted closes. A holding period that
-     spans an ex-dividend date shows a price drop here that a shareholder did
-     not actually suffer. The local TongdaXin install holds only `.day` files,
-     so reproducing the study's prices means fetching ex-rights records from
-     the TongdaXin quote servers, the way
-     `research/event_study/fetch_xdxr.py` does.
    - **Model pool.** The app's snapshot records a stock only when it has both a
      3.5-year and a 1-year model, so its pool is the intersection of the two
      horizons; the study used each window's own universe. The app's pool is
@@ -214,3 +217,14 @@ signal-code bug above:
      the page falls back to the absolute numbers alone. On the Beijing market,
      where the pool is a handful of stocks, there is usually no baseline to
      show at all.
+   - **Anomalous days.** A day whose adjusted move exceeds the board's limit
+     (10% on the main board, 20% on ChiNext and the STAR market, 30% on the
+     Beijing market, the first five sessions of a new listing excepted) means a
+     factor is wrong: the vendor missed an ex-rights record, or dated one
+     differently. The study drops the returns whose holding window covers such
+     a day, and the cohort report does the same. Only A shares are judged —
+     the rule rests on the daily price limit, and the app's pool also holds
+     funds and sector indices, which have none. A simulated account cannot
+     un-buy a position, so the simulation keeps such a trade and reports how
+     many were affected rather than quietly banking a number nobody should
+     trust.

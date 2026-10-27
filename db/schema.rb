@@ -10,7 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_000100) do
+  create_table "stock_corporate_actions", force: :cascade do |t|
+    t.string "area", null: false
+    t.float "bonus", default: 0.0, null: false
+    t.float "cash", default: 0.0, null: false
+    t.integer "category", null: false
+    t.datetime "created_at", null: false
+    t.date "ex_date", null: false
+    t.float "factor", null: false
+    t.datetime "fetched_at", null: false
+    t.float "resize", default: 0.0, null: false
+    t.float "rights", default: 0.0, null: false
+    t.float "rights_price", default: 0.0, null: false
+    t.string "stock", null: false
+    t.datetime "updated_at", null: false
+    t.index ["area", "stock", "ex_date", "category"], name: "index_corporate_actions_on_area_stock_date_category", unique: true
+    t.index ["area", "stock"], name: "index_corporate_actions_on_area_and_stock"
+  end
+
   create_table "stock_fundamentals", force: :cascade do |t|
     t.string "area", null: false
     t.datetime "created_at", null: false
@@ -28,6 +46,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_000000) do
     t.string "stock", null: false
     t.datetime "updated_at", null: false
     t.index ["area", "stock"], name: "index_stock_fundamentals_on_area_and_stock", unique: true
+  end
+
+  create_table "stock_price_anomalies", force: :cascade do |t|
+    t.string "area", null: false
+    t.float "change_pct", null: false
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.datetime "detected_at", null: false
+    t.float "limit_pct", null: false
+    t.string "stock", null: false
+    t.datetime "updated_at", null: false
+    t.index ["area", "stock", "date"], name: "index_price_anomalies_on_area_stock_date", unique: true
   end
 
   create_table "stock_signal_snapshots", force: :cascade do |t|

@@ -29,7 +29,14 @@ module Stock
                       .group_by(&:signal_date)
                       .transform_values { |rows| rows.index_by(&:stock) }
 
-      outcomes = forward_outcomes(by_date, dates)
+      # The report measures what a shareholder would have earned, so the
+      # prices it works from are the dividend- and split-adjusted ones -- the
+      # same prices the event study measures on. The signal itself was, and
+      # still is, derived from the raw close.
+      factors = PriceAdjustment.factors_for(@area, by_date.values.flat_map(&:keys).uniq)
+      anomalies = PriceAnomalies.for(@area)
+
+      outcomes = forward_outcomes(by_date, dates, factors, anomalies)
       baselines = baseline_by_date(outcomes)
 
       Report.new(
@@ -59,7 +66,12 @@ module Stock
       # own close, which put the decision's own move inside the "forward"
       # return it was judging — the same close the decision could not yet act
       # on was the one it was credited with.
-      def forward_outcomes(by_date, dates)
+      #
+      # A holding period that crosses a day whose adjusted move no board
+      # allows is dropped: that day means a factor is wrong, so the return
+      # across it is not a number anyone should act on. The event study drops
+      # the same windows (analyze.py, forward_returns).
+      def forward_outcomes(by_date, dates, factors, anomalies)
         outcomes = {}
 
         dates.each_with_index do |date, index|
@@ -71,21 +83,27 @@ module Stock
           entry_map = by_date[dates[entry_position]]
           exit_map  = by_date[dates[exit_position]]
 
+          entry_date = dates[entry_position]
+          exit_date  = dates[exit_position]
+
           per_stock = {}
           universe.each do |stock, _snapshot|
             entry         = entry_map[stock]
             exit_snapshot = exit_map[stock]
             next unless entry && exit_snapshot
             next unless valid_prices?(entry, exit_snapshot)
+            next if anomalies.crosses?(stock, entry_date, exit_date)
 
             path = (entry_position..exit_position).filter_map do |position|
-              by_date[dates[position]]&.dig(stock)&.price
+              snapshot = by_date[dates[position]]&.dig(stock)
+              snapshot && factors.price(stock, dates[position], snapshot.price)
             end
             next unless path.size == @horizon + 1
 
+            entry_price = path.first
             per_stock[stock] = {
-              return: percentage_change(entry.price, exit_snapshot.price),
-              drawdown: path.map { |price| percentage_change(entry.price, price) }.min
+              return: percentage_change(entry_price, path.last),
+              drawdown: path.map { |price| percentage_change(entry_price, price) }.min
             }
           end
 

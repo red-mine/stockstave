@@ -761,7 +761,8 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
     )
     simulation = Stock::StrategySimulation::Result.new(
       ready: true, dates: dates.size, starting_cash: 100_000.0, final_equity: 103_000.0,
-      total_return: 3.0, max_drawdown: -1.0, trades: [trade], equity_curve: equity_curve
+      total_return: 3.0, max_drawdown: -1.0, trades: [trade], equity_curve: equity_curve,
+      anomalous_trades: 0
     )
     benchmark = Stock::IndexBenchmark::Result.new(
       available: true, index_code: "sz399001", total_return: 2.0,
@@ -788,7 +789,8 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
     equity_curve = dates.map { |date| Stock::StrategySimulation::EquityPoint.new(date: date, equity: 100_000.0) }
     simulation = Stock::StrategySimulation::Result.new(
       ready: true, dates: dates.size, starting_cash: 100_000.0, final_equity: 100_000.0,
-      total_return: 0.0, max_drawdown: 0.0, trades: [], equity_curve: equity_curve
+      total_return: 0.0, max_drawdown: 0.0, trades: [], equity_curve: equity_curve,
+      anomalous_trades: 0
     )
     benchmark = Stock::IndexBenchmark::Result.new(available: false, index_code: nil, total_return: nil, prices: {})
 
@@ -800,6 +802,32 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".performance-card", text: /No index data available for BJ/
+  end
+
+  test "signal history says which price basis the returns were measured on" do
+    dates = 20.times.map { |index| Date.new(2026, 1, 1) + index }
+    dates.each do |date|
+      StockSignalSnapshot.create!(
+        stock: "sz000001", area: Stock::SZSTK, signal_date: date, price: 100.0,
+        year_signal: "BUY5", lohas_signal: "BUY5"
+      )
+    end
+
+    get signal_history_path(area: Stock::SZSTK)
+
+    assert_response :success
+    assert_select ".method-note", text: /raw closes/
+
+    StockCorporateAction.create!(
+      area: Stock::SZSTK, stock: "sz000001", ex_date: Date.new(2026, 1, 6),
+      category: Stock::TdxQuote::CATEGORY_EX_RIGHTS, cash: 0.0, bonus: 10.0,
+      rights: 0.0, rights_price: 0.0, resize: 0.0, factor: 2.0, fetched_at: Time.current
+    )
+
+    get signal_history_path(area: Stock::SZSTK)
+
+    assert_response :success
+    assert_select ".method-note", text: /adjusted closes/
   end
 
   test "JSON errors use a structured response" do

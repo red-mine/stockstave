@@ -26,6 +26,9 @@ def print_simulation(mode, result, area, detail: false)
     puts "Trades closed:     #{result.trades.size}"
     puts "Win rate:          #{(wins.fdiv(result.trades.size) * 100).round(2)}%"
     puts "Avg holding days:  #{avg_hold.round(1)}"
+    if result.anomalous_trades.positive?
+      puts "Flagged trades:    #{result.anomalous_trades} (cover a day whose adjusted move no board allows)"
+    end
   else
     puts "No trades were closed."
   end
@@ -154,6 +157,57 @@ task :fundamentals_refresh, [:area] => :environment do |_task, args|
   end
 end
 
+desc "Fetch the ex-rights records that turn raw closes into shareholder prices"
+task :corporate_actions_refresh, [:area] => :environment do |_task, args|
+  areas = args.area.present? ? [args.area] : Stock::AREAS
+  unsupported = areas - Stock::AREAS
+  abort "Unsupported market(s): #{unsupported.join(', ')}" unless unsupported.empty?
+
+  areas.each do |area|
+    stocks = Stock::CorporateActionImporter.measured_stocks(area)
+    puts "Fetching #{area.upcase} corporate actions for #{stocks.size} stock(s)..."
+    report = Stock::CorporateActionImporter.new(area: area).call(stocks)
+
+    puts "#{area.upcase}: stocks=#{report.stocks} events=#{report.events} stored=#{report.stored} " \
+         "anomalies=#{report.anomalies.size} failed=#{report.failures.size}"
+    report.failures.each { |stock, error| puts "  failed #{stock}: #{error}" }
+    report.anomalies.first(20).each do |anomaly|
+      puts "  anomaly #{anomaly[:stock]} #{anomaly[:date]}: #{anomaly[:change_pct].round(2)}% " \
+           "(board limit #{anomaly[:limit_pct]}%)"
+    end
+    puts "  #{report.anomalies.size - [report.anomalies.size, 20].min} further anomalies not listed." if report.anomalies.size > 20
+  end
+end
+
+desc "Recompute the adjustment factors and price anomalies from the stored corporate actions"
+task :corporate_actions_rebuild, [:area] => :environment do |_task, args|
+  areas = args.area.present? ? [args.area] : Stock::AREAS
+  unsupported = areas - Stock::AREAS
+  abort "Unsupported market(s): #{unsupported.join(', ')}" unless unsupported.empty?
+
+  areas.each do |area|
+    stocks = Stock::CorporateActionRebuilder.measured_stocks(area)
+    report = Stock::CorporateActionRebuilder.new(area: area).call(stocks)
+    puts "#{area.upcase}: stocks=#{report.stocks} events=#{report.events} stored=#{report.stored} " \
+         "anomalies=#{report.anomalies.size}"
+  end
+end
+
+desc "Report the stored corporate actions and the price anomalies they imply"
+task corporate_actions_status: :environment do
+  Stock::AREAS.each do |area|
+    actions = StockCorporateAction.where(area: area)
+    anomalies = StockPriceAnomaly.where(area: area)
+    adjusted = actions.where.not(factor: 1.0).count
+    puts "#{area.upcase}: events=#{actions.count} stocks=#{actions.distinct.count(:stock)} " \
+         "with_factor=#{adjusted} anomalies=#{anomalies.count} " \
+         "anomaly_stocks=#{anomalies.distinct.count(:stock)}"
+    anomalies.order(:date).limit(20).each do |anomaly|
+      puts "  #{anomaly.stock} #{anomaly.date}: #{anomaly.change_pct.round(2)}% (board limit #{anomaly.limit_pct}%)"
+    end
+  end
+end
+
 desc "Report TongdaXin source and generated-data health"
 task data_status: :environment do
   checker = Stock::DataStatus.new
@@ -202,6 +256,21 @@ task daily_refresh: :environment do
 
       stored = StockSignalSnapshot.group(:area).count
       puts "Daily refresh complete. Captured rows: #{captured.sort.to_h.inspect}. Stored history rows: #{stored.sort.to_h.inspect}"
+
+      # The adjustment factors and the flagged days are derived from the local
+      # price history, which the download has just refreshed, so they are
+      # re-derived here. A failure here is not a refresh failure: the market
+      # data is current either way, and factors that lag by a day only mean a
+      # dividend reads as a loss for a day.
+      begin
+        Stock::AREAS.each do |area|
+          stocks = Stock::CorporateActionRebuilder.measured_stocks(area)
+          rebuilt = Stock::CorporateActionRebuilder.new(area: area).call(stocks)
+          puts "#{area.upcase}: rebuilt #{rebuilt.events} corporate action(s), #{rebuilt.anomalies.size} flagged day(s)"
+        end
+      rescue StandardError => error
+        puts "WARNING: could not rebuild the price adjustment factors: #{error.message}"
+      end
 
       Stock::AREAS.each do |area|
         report = Stock::SignalNotifier.new(area).call
@@ -381,6 +450,8 @@ task :backtest, [:area] => :environment do |_task, args|
   puts "Note: Returns are not annualized. Transaction costs are not deducted."
   puts "      Overlapping holding periods are included in the sample."
   puts "      Entry is the close after the signal date; excess is against the model pool of the same day."
+  puts "      Prices are dividend- and split-adjusted, so a holding period across an ex-date is measured as the shareholder saw it."
+  puts "      A holding period covering a day whose adjusted move no board would allow is dropped."
 end
 
 desc "Simulate following the buy/sell recommendation (equal vs. grid position sizing)"

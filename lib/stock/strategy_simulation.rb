@@ -19,7 +19,7 @@ module Stock
     BASE_WEIGHT = 1.0
     SIZING_MODES = %i[equal grid].freeze
 
-    Result = Data.define(:ready, :dates, :starting_cash, :final_equity, :total_return, :max_drawdown, :trades, :equity_curve)
+    Result = Data.define(:ready, :dates, :starting_cash, :final_equity, :total_return, :max_drawdown, :trades, :equity_curve, :anomalous_trades)
     Trade = Data.define(:stock, :entry_date, :exit_date, :entry_price, :exit_price, :return_pct, :reason, :weight, :zone)
     EquityPoint = Data.define(:date, :equity)
     # entry_cash is the gross cash committed before buy_cost_rate is deducted;
@@ -48,6 +48,14 @@ module Stock
         .group_by(&:signal_date)
         .transform_values { |rows| rows.index_by(&:stock) }
 
+      # The account is measured on the prices a shareholder would have seen:
+      # dividend- and split-adjusted closes, the same prices the event study
+      # measures on. The signals that fill the account still come from the
+      # raw close.
+      @factors = PriceAdjustment.factors_for(@area, snapshots_by_date.values.flat_map(&:keys).uniq)
+      @anomalies = PriceAnomalies.for(@area)
+      @anomalous_trades = 0
+
       cash = @starting_cash
       positions = {}
       trades = []
@@ -66,7 +74,7 @@ module Stock
         positions.keys.each do |stock|
           position = positions[stock]
           snapshot = today[stock]
-          position.last_price = snapshot.price if snapshot
+          position.last_price = @factors.price(stock, date, snapshot.price) if snapshot
 
           reason = exit_reason(snapshot, position, index)
           next unless reason
@@ -98,7 +106,8 @@ module Stock
         total_return: rounded((cash / @starting_cash - 1) * 100),
         max_drawdown: rounded(max_drawdown(equity_curve)),
         trades: trades,
-        equity_curve: equity_curve
+        equity_curve: equity_curve,
+        anomalous_trades: @anomalous_trades
       )
     end
 
@@ -107,7 +116,7 @@ module Stock
     def not_ready(dates_count)
       Result.new(
         ready: false, dates: dates_count, starting_cash: @starting_cash, final_equity: @starting_cash,
-        total_return: 0.0, max_drawdown: 0.0, trades: [], equity_curve: []
+        total_return: 0.0, max_drawdown: 0.0, trades: [], equity_curve: [], anomalous_trades: 0
       )
     end
 
@@ -128,7 +137,7 @@ module Stock
       fillable.each_with_index do |stock, offset|
         per_position = cash * weights[offset] / total_weight
         spent += per_position
-        price = today[stock].price
+        price = @factors.price(stock, date, today[stock].price)
         positions[stock] = Position.new(stock, index, date, price, per_position, per_position * (1 - @buy_cost_rate), price, weights[offset], today[stock].lohas_stave)
       end
 
@@ -168,6 +177,14 @@ module Stock
     def close_position!(trades, position, exit_date, exit_price, reason)
       raw_proceeds = position.allocated_capital * (exit_price / position.entry_price)
       net_proceeds = raw_proceeds * (1 - @sell_cost_rate)
+
+      # A trade whose holding period covers a day whose adjusted move no
+      # board allows is reported rather than quietly counted: that day means
+      # a factor is wrong, so the return across it is not a number anyone
+      # should act on. The event study drops the same windows
+      # (analyze.py, forward_returns); an account cannot un-buy a position,
+      # so the simulation keeps it and says so.
+      @anomalous_trades += 1 if @anomalies.crosses?(position.stock, position.entry_date, exit_date)
 
       trades << Trade.new(
         stock: position.stock, entry_date: position.entry_date, exit_date: exit_date,

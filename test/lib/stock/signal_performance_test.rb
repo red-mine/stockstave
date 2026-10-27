@@ -203,4 +203,58 @@ class StockSignalPerformanceTest < ActiveSupport::TestCase
     assert_nil report.baseline.average_return
     assert_equal 0, report.baseline.dates
   end
+
+  # A holding period that spans an ex-rights date shows a price drop that a
+  # shareholder did not suffer: the ten-for-ten bonus halves the quote and
+  # doubles what a share is worth. The report measures on the adjusted
+  # prices, the way the event study does.
+  test "measures returns on the prices a shareholder would have seen" do
+    dates = 20.times.map { |index| Date.new(2026, 1, 1) + index }
+    dates.each_with_index do |date, index|
+      StockSignalSnapshot.create!(
+        stock: "sz000001", area: Stock::SZSTK, signal_date: date,
+        price: index < 5 ? 100.0 : 50.0,
+        year_signal: "BUY5", lohas_signal: "BUY5"
+      )
+    end
+
+    raw = Stock::SignalPerformance.new(Stock::SZSTK, horizon: 5).call
+    # 14 signal dates leave a full window; four of them enter before the
+    # bonus and leave after it, so the raw price halves under them.
+    assert_in_delta(-14.29, raw.cohorts.first.average_return, 0.005)
+
+    StockCorporateAction.create!(
+      area: Stock::SZSTK, stock: "sz000001", ex_date: dates[5],
+      category: Stock::TdxQuote::CATEGORY_EX_RIGHTS, cash: 0.0, bonus: 10.0,
+      rights: 0.0, rights_price: 0.0, resize: 0.0, factor: 2.0, fetched_at: Time.current
+    )
+
+    adjusted = Stock::SignalPerformance.new(Stock::SZSTK, horizon: 5).call
+
+    assert_in_delta 0.0, adjusted.cohorts.first.average_return, 1e-9
+    assert_in_delta 0.0, adjusted.cohorts.first.average_drawdown, 1e-9
+  end
+
+  # A day whose adjusted move no board would allow means a factor is wrong,
+  # so the return across it is not a number anyone should act on. The event
+  # study drops the same windows.
+  test "drops a holding period that covers a day whose adjusted move no board allows" do
+    dates = 20.times.map { |index| Date.new(2026, 1, 1) + index }
+    dates.each do |date|
+      StockSignalSnapshot.create!(
+        stock: "sz000001", area: Stock::SZSTK, signal_date: date, price: 100.0,
+        year_signal: "BUY5", lohas_signal: "BUY5"
+      )
+    end
+    StockPriceAnomaly.create!(
+      area: Stock::SZSTK, stock: "sz000001", date: dates[3],
+      change_pct: -50.0, limit_pct: 10.5, detected_at: Time.current
+    )
+
+    report = Stock::SignalPerformance.new(Stock::SZSTK, horizon: 5).call
+
+    # 14 signal dates leave a full window, and three of their windows cover
+    # the flagged day.
+    assert_equal 11, report.cohorts.first.sample_size
+  end
 end

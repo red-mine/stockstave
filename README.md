@@ -61,6 +61,52 @@ When the variable is not set, the calculation engine uses:
 `<area>` is `sz`, `sh`, or `bj`. Each stock needs enough history for the chosen
 window plus the 20-week channel.
 
+## Adjusted prices
+
+Signals are derived from the raw TongdaXin close, and they always were. The
+*returns* the app reports are measured on dividend- and split-adjusted closes,
+so a holding period across an ex-dividend date is judged the way a shareholder
+would have experienced it. This is the same adjustment the event study uses
+(`research/event_study/fetch_xdxr.py`), and the two implementations produce
+identical numbers.
+
+The ex-rights records come from the TongdaXin quote servers, fetched over the
+binary quote protocol by `Stock::TdxQuote` — no Python runtime is involved.
+The local TongdaXin install holds only `.day` files, so the records have to be
+fetched over the network:
+
+```powershell
+bundle exec rails corporate_actions_refresh      # all markets
+bundle exec rails "corporate_actions_refresh[sz]"
+```
+
+The task stores one row per price-moving event under `stock_corporate_actions`
+(an ex-dividend/ex-rights event or a share split — the other categories the
+servers report do not move a price) together with the back-adjustment factor
+the event leaves behind. It then checks each A share's adjusted series for a
+daily move no board would allow: 10% on the main board, 20% on ChiNext and the
+STAR market, 30% on the Beijing market, the first five sessions of a new
+listing excepted. Such a day means a factor is wrong — the vendor missed an
+ex-rights record, or dated one differently — and it is recorded under
+`stock_price_anomalies`. Only A shares are judged, because the rule rests on
+the daily price limit and a fund or a sector index has none. The cohort
+report drops the holding periods that cover a flagged day; the simulated
+account keeps the trade but reports how many of its trades were affected,
+because an account cannot un-buy a position.
+
+The factors are derived from the local price history, so they are re-derived
+whenever that history changes:
+
+```powershell
+bundle exec rails corporate_actions_rebuild      # all markets
+bundle exec rails corporate_actions_status
+```
+
+`corporate_actions_status` reports how many events each market has, how many
+of them actually move a price, and how many days are flagged. The report page
+states which price basis it used, so a number measured on raw prices is never
+read as one measured on adjusted prices.
+
 ## Generate analysis data
 
 For normal daily operation, run:
