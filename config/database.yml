@@ -18,7 +18,11 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *default
-  database: db/test.sqlite3
+  # One checkout runs one suite. Two suites writing the same SQLite file
+  # make one of them fail with "database is locked": SQLite answers a lock
+  # upgrade with SQLITE_BUSY at once, so no busy wait can rescue it. Give a
+  # second run its own file with STOCK_TEST_DATABASE to run two at once.
+  database: <%= ENV.fetch("STOCK_TEST_DATABASE", "db/test.sqlite3") %>
 
 production:
   <<: *default

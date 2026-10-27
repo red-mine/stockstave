@@ -435,6 +435,19 @@ The tests cover market routing, configurable data paths, resumable imports,
 binary decoding, moving averages, regression alignment, stave deviation, trend
 eligibility, and every currently reachable signal code.
 
+One checkout runs one suite at a time. The test database is a single SQLite
+file, and SQLite answers a lock upgrade with `SQLITE_BUSY` at once, so two
+suites writing it together leave one of them failing with "database is
+locked". To run a second suite beside the first, give it its own database:
+
+```powershell
+$env:RAILS_ENV = "test"
+$env:STOCK_TEST_DATABASE = "tmp/test-alternate.sqlite3"
+bundle exec rails db:test:prepare
+Remove-Item Env:RAILS_ENV
+bundle exec rails test
+```
+
 GitHub Actions runs the test database setup, pending-migration check, complete
 test suite, Zeitwerk autoload check, PowerShell automation syntax check,
 bundler-audit, Brakeman, schema consistency check, and whitespace validation on
