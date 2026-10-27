@@ -2,6 +2,20 @@ require "test_helper"
 require "rake"
 
 class DailyRefreshTaskTest < ActiveSupport::TestCase
+  # Stands in for the importer: the refresh calls it with the stocks and a
+  # budget and reads a report back.
+  class StubImporter
+    def initialize(report, &on_call)
+      @report = report
+      @on_call = on_call
+    end
+
+    def call(*_args, **_options)
+      @on_call&.call
+      @report
+    end
+  end
+
   setup do
     Rails.application.load_tasks unless Rake::Task.task_defined?("daily_refresh")
     Rake::Task["daily_refresh"].reenable
@@ -13,6 +27,25 @@ class DailyRefreshTaskTest < ActiveSupport::TestCase
     Rake::Task["daily_refresh"].reenable
     Rake::Task["record_refresh_failure"].reenable if Rake::Task.task_defined?("record_refresh_failure")
     FileUtils.remove_entry(@refresh_directory) if File.exist?(@refresh_directory)
+  end
+
+  test "fetches the corporate actions for every market after the snapshots" do
+    market = { healthy: true, source_date: Date.new(2026, 7, 31) }
+    checker = Stock::DataStatus.allocate
+    fetched = []
+
+    checker.stub(:call, Stock::AREAS.index_with { market }) do
+      Stock::DataStatus.stub(:new, ->(*) { checker }) do
+        Stock::SignalSnapshot.stub(:capture!, 1) do
+          importer = ->(area:) { StubImporter.new(empty_report) { fetched << area } }
+          output, = capture_io { invoke_daily_refresh(importer: importer) }
+
+          assert_match(/fetched 0 corporate action\(s\)/, output)
+        end
+      end
+    end
+
+    assert_equal Stock::AREAS, fetched
   end
 
   test "records snapshots for every market even when none need refreshing" do
@@ -121,15 +154,27 @@ class DailyRefreshTaskTest < ActiveSupport::TestCase
 
   private
 
-  def invoke_daily_refresh(backup: -> {})
+  def invoke_daily_refresh(backup: -> {}, importer: nil)
     refresh_run = Stock::RefreshRun.new(
       lock_path: File.join(@refresh_directory, "refresh.lock"),
       status_path: File.join(@refresh_directory, "status.json")
     )
+    # The refresh fetches the ex-rights records from the quote servers, and a
+    # test has no business reaching the network: the step is stubbed here so
+    # that it never depends on a server answering.
+    build = importer || ->(area:) { StubImporter.new(empty_report) }
     Stock::RefreshRun.stub(:new, ->(*) { refresh_run }) do
       Rake::Task[:database_backup].stub(:invoke, backup) do
-        Rake::Task["daily_refresh"].invoke
+        Stock::CorporateActionImporter.stub(:new, build) do
+          Rake::Task["daily_refresh"].invoke
+        end
       end
     end
+  end
+
+  def empty_report
+    Stock::CorporateActionImporter::Report.new(
+      stocks: 0, events: 0, stored: 0, failures: {}, anomalies: []
+    )
   end
 end
