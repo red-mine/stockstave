@@ -28,7 +28,14 @@ Rails.application.configure do
   config.cache_store = :null_store
 
   # Raise exceptions instead of rendering exception templates.
-  config.action_dispatch.show_exceptions = false
+  #
+  # Rails reads this setting as :all, :rescuable or :none. The bare `false`
+  # this used to hold matches none of them and falls through to the branch
+  # that shows everything, so an exception raised inside a request came back
+  # as a rendered 500 page rather than reaching the test. That turned a real
+  # error into an assertion failure reading only "expected 404 but was 500",
+  # with the backtrace nowhere in the report.
+  config.action_dispatch.show_exceptions = :none
 
   # Disable request forgery protection in test environment.
   config.action_controller.allow_forgery_protection = false
