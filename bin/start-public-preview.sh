@@ -149,7 +149,13 @@ TUNNEL_PID=$!
 PUBLIC_URL=""
 for _ in $(seq 1 30); do
   # cloudflared logs the issued URL to stderr; read both streams like the PowerShell launcher.
-  PUBLIC_URL=$(grep -hoE 'https://[a-z0-9-]+\.trycloudflare\.com' "$TUNNEL_OUT" "$TUNNEL_ERR" 2>/dev/null | head -1 || true)
+  # The issued URL is the only trycloudflare.com address that is not followed by a
+  # path. A failed request logs "https://api.trycloudflare.com/tunnel", and
+  # reading that as the preview's address sends every later check to the
+  # Cloudflare API instead of the preview -- which is how a tunnel that never
+  # started looked like a preview that would not answer.
+  PUBLIC_URL=$(grep -hoE 'https://[a-z0-9-]+\.trycloudflare\.com([^[:alnum:]\/-]|$)' "$TUNNEL_OUT" "$TUNNEL_ERR" 2>/dev/null \
+    | head -1 | sed -E 's/([^[:alnum:]\/-])$//' || true)
   if [[ -n "$PUBLIC_URL" ]]; then
     break
   fi

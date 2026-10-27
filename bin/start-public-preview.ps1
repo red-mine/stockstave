@@ -126,7 +126,12 @@ $deadline = (Get-Date).AddSeconds(60)
 do {
   Start-Sleep -Seconds 2
   $tunnelLog = ((Get-Content $tunnelOut -Raw -ErrorAction SilentlyContinue) + "`n" + (Get-Content $tunnelError -Raw -ErrorAction SilentlyContinue))
-  $urlMatch = [regex]::Match($tunnelLog, "https://[a-z0-9-]+\.trycloudflare\.com")
+  # The issued URL is the only trycloudflare.com address that is not followed
+  # by a path. A failed request logs "https://api.trycloudflare.com/tunnel",
+  # and reading that as the preview's address sends every later check to the
+  # Cloudflare API instead of the preview -- which is how a tunnel that never
+  # started looked like a preview that would not answer.
+  $urlMatch = [regex]::Match($tunnelLog, "https://[a-z0-9-]+\.trycloudflare\.com(?![/\w-])")
 } while (-not $urlMatch.Success -and (Get-Date) -lt $deadline)
 if (-not $urlMatch.Success) {
   Stop-Process -Id $tunnel.Id -Force -ErrorAction SilentlyContinue
