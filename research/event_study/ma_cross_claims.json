@@ -1,0 +1,14 @@
+[
+  {"text": "ma5_20 golden cross vs pool, 20d (claimed +)", "label": "ma5_20|GOLD|state|universe", "h": 20, "sign": 1},
+  {"text": "ma5_20 golden cross vs pool, 60d (claimed +)", "label": "ma5_20|GOLD|state|universe", "h": 60, "sign": 1},
+  {"text": "ma5_20 death cross vs pool, 20d (claimed -)", "label": "ma5_20|DEATH|state|universe", "h": 20, "sign": -1},
+  {"text": "ma5_20 golden minus death, 20d (claimed +)", "label": "ma5_20|GOLD-DEATH|state", "h": 20, "sign": 1},
+  {"text": "ma20_60 golden cross vs pool, 20d (claimed +)", "label": "ma20_60|GOLD|state|universe", "h": 20, "sign": 1},
+  {"text": "ma20_60 golden cross vs pool, 60d (claimed +)", "label": "ma20_60|GOLD|state|universe", "h": 60, "sign": 1},
+  {"text": "ma20_60 death cross vs pool, 20d (claimed -)", "label": "ma20_60|DEATH|state|universe", "h": 20, "sign": -1},
+  {"text": "ma20_60 golden minus death, 20d (claimed +)", "label": "ma20_60|GOLD-DEATH|state", "h": 20, "sign": 1},
+  {"text": "ma50_200 golden cross vs pool, 20d (claimed +)", "label": "ma50_200|GOLD|state|universe", "h": 20, "sign": 1},
+  {"text": "ma50_200 golden cross vs pool, 60d (claimed +)", "label": "ma50_200|GOLD|state|universe", "h": 60, "sign": 1},
+  {"text": "ma50_200 death cross vs pool, 20d (claimed -)", "label": "ma50_200|DEATH|state|universe", "h": 20, "sign": -1},
+  {"text": "ma50_200 golden minus death, 20d (claimed +)", "label": "ma50_200|GOLD-DEATH|state", "h": 20, "sign": 1}
+]

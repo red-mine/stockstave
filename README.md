@@ -95,6 +95,7 @@ signals lack.
 |---|---|
 | [docs/conclusion.md](docs/conclusion.md) | The verdict and the reasons, in one page (Chinese) |
 | [docs/event_study.md](docs/event_study.md) | The full study: method, tables, by-year results, holdout and walk-forward (section 12) (Chinese) |
+| [docs/ma_cross.md](docs/ma_cross.md) | Moving-average golden crosses, tested with the same pipeline: they underperform (Chinese) |
 | [docs/lohas_stave_strategy.md](docs/lohas_stave_strategy.md) | The strategy, signal definitions and known limitations |
 | [docs/price_adjustment_impact.md](docs/price_adjustment_impact.md) | What switching to adjusted prices changed in the app's reports |
 | [research/event_study/README.md](research/event_study/README.md) | How to reproduce every number |

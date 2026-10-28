@@ -35,6 +35,7 @@ window|LONG-SHORT|entry, window|code:SIGNAL), `sign` the direction claimed:
       "h": 20, "sign": -1}]
 """
 import argparse
+import gc
 import json
 
 import numpy as np
@@ -53,12 +54,20 @@ def span(text):
 
 
 def period(sig, prices, beg, end):
-    """Signals dated in [beg, end] with returns from prices up to `end`."""
+    """Signals dated in [beg, end] with returns from prices up to `end`.
+    Only the columns the statistics read are kept: a daily full-market
+    signal set is over ten million rows."""
     fwd = A.forward_returns(prices[prices["date"] <= end])
     s = sig[(sig["date"] >= beg) & (sig["date"] <= end)].drop(
         columns=[f"r{h}" for h in A.HORIZONS], errors="ignore")
     s = A.attach_returns(s, fwd)
+    s = s[["date", "window", "signal", "family", "entry"] + [f"r{h}" for h in A.HORIZONS]]
     return s, fwd
+
+
+def window_rows(s, window, cfg):
+    """The rows of one window, without a copy when it is the only one."""
+    return s if len(cfg.windows) == 1 else s[s["window"] == window]
 
 
 def events(u, fam, kind):
@@ -79,7 +88,7 @@ def table(s, fwd, cfg):
     market = A.build_baseline(fwd)
     rows = []
     for window in cfg.windows:
-        u = s[s["window"] == window]
+        u = window_rows(s, window, cfg)
         base = A.build_baseline(u)
         for fam in cfg.families:
             for kind in ("state", "entry"):
@@ -159,7 +168,7 @@ def by_year(s, fwd, cfg, first, last):
         f"{r['excess'] * 100:+6.2f} ({r['t']:+4.1f})"
     market = A.build_baseline(fwd)
     for window in cfg.windows:
-        u = s[s["window"] == window]
+        u = window_rows(s, window, cfg)
         base = A.build_baseline(u)
         print(f"\n== by year, {window} window: {cfg.spread} entry 10d / {cfg.short} vs pool 20d"
               f" / no-signal vs market 60d ==")
@@ -182,7 +191,7 @@ def candidate_series(s, fwd, cfg):
     market = A.build_baseline(fwd)
     out = {}
     for window in cfg.windows:
-        u = s[s["window"] == window]
+        u = window_rows(s, window, cfg)
         base = A.build_baseline(u)
         for fam in cfg.families:
             for kind in ("state", "entry"):
@@ -273,6 +282,7 @@ def main():
     sig = A.load_signals(out_dir, cfg.vipdoc)
     sig = A.mark_entries(sig)           # on the full history, so a period's
                                         # first day is not an entry for all
+    sig = sig.drop(columns=["prev_date"])
     prices = pd.read_parquet(cfg.prices or f"{out_dir}/adjusted.parquet")
     if A.set_lag_step(sig, prices) > 1:
         print(f"signals every {A.LAG_STEP} trading days: overlap lags scaled to match")
@@ -290,6 +300,8 @@ def main():
     claims_report(study, claims, "claims on the study period (should match the report)")
 
     beg, end = study_beg, study_end
+    del s, fwd                          # one period in memory at a time
+    gc.collect()
     if cfg.holdout:
         hold_beg, hold_end = cfg.holdout
         s, fwd = period(sig, prices, hold_beg, hold_end)
@@ -298,8 +310,12 @@ def main():
         main_table(hold, f"holdout {hold_beg}..{hold_end}", cfg)
         claims_report(hold, claims, "claims on the holdout")
         beg, end = min(beg, hold_beg), max(end, hold_end)
+        del s, fwd
+        gc.collect()
 
     s, fwd = period(sig, prices, beg, end)
+    del sig, prices
+    gc.collect()
     by_year(s, fwd, cfg, beg // 10000, end // 10000)
 
     series = candidate_series(s, fwd, cfg)
