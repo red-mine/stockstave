@@ -293,6 +293,11 @@ task daily_refresh: :environment do
         end
       end
 
+      # The adjustment factors above feed the performance and simulation
+      # measurements, so the web report is built only after they are current.
+      Stock::SignalHistoryReport.rebuild_all
+      puts "Precomputed signal history reports for #{Stock::AREAS.map(&:upcase).join(', ')}."
+
       Stock::AREAS.each do |area|
         report = Stock::SignalNotifier.new(area).call
         next if report.empty?
@@ -339,6 +344,15 @@ task snapshot_status: :environment do
   Stock::AREAS.each do |area|
     snapshots = StockSignalSnapshot.where(area: area)
     puts "#{area.upcase}: rows=#{snapshots.count} dates=#{snapshots.distinct.count(:signal_date)} latest=#{snapshots.maximum(:signal_date) || 'missing'}"
+  end
+end
+
+desc "Precompute the web signal-history reports from the saved snapshots"
+task signal_history_reports: :environment do
+  Stock::SignalHistoryReport.rebuild_all.each do |area, report|
+    puts "#{area.upcase}: generated=#{report.generated_at.utc.iso8601} source=#{report.source_date || 'none'} " \
+         "performance=#{report.performance.ready ? 'ready' : 'collecting'} " \
+         "simulation=#{report.simulation.ready ? 'ready' : 'collecting'}"
   end
 end
 

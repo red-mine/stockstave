@@ -41,17 +41,21 @@ class StocksController < ApplicationController
 
   def signal_history
     @area = stock_area
-    @performance = Stock::SignalPerformance.new(@area).call
-    @simulation = Stock::StrategySimulation.new(@area).call
-    # The returns above are measured on adjusted prices when the corporate
-    # actions that adjust them are loaded, and on raw prices when they are
-    # not. The page says which, so a number is never read as something it is
-    # not.
-    @price_basis = Stock::PriceAdjustment.basis_for(@area)
+    # This report is precomputed after the nightly refresh and reread here.
+    # Rebuilding it on request is the fallback for a missing or stale row, not
+    # the normal path: the page used to replay the whole snapshot history for
+    # every visitor.
+    report = Stock::SignalHistoryReport.fetch(@area)
+    @performance = report.performance
+    @simulation = report.simulation
+    # The returns are measured on adjusted prices when the corporate actions
+    # that adjust them are loaded, and on raw prices when they are not. The
+    # page says which, so a number is never read as something it is not.
+    @price_basis = report.price_basis
     if @simulation.ready
-      @simulation_days = simulation_daily_rows(@simulation)
-      @benchmark = Stock::IndexBenchmark.new(@area, @simulation.equity_curve.map(&:date)).call
-      @benchmark_series = benchmark_series(@benchmark, @simulation) if @benchmark.available
+      @simulation_days = report.simulation_days
+      @benchmark = report.benchmark
+      @benchmark_series = report.benchmark_series if @benchmark.available
     end
     # The report's own readiness rule lives in SignalPerformance. Reading it
     # here rather than restating 20 keeps this card from claiming a market is
@@ -130,28 +134,6 @@ class StocksController < ApplicationController
 
     def stock_area
       params[:area].to_s.downcase.in?(supported_stock_areas) ? params[:area].downcase : Stock::SZSTK
-    end
-
-    def simulation_daily_rows(result)
-      entries_by_date = result.trades.group_by(&:entry_date)
-      exits_by_date = result.trades.group_by(&:exit_date)
-      previous_equity = result.starting_cash
-
-      result.equity_curve.map do |point|
-        change_pct = ((point.equity - previous_equity) / previous_equity * 100).round(2)
-        previous_equity = point.equity
-        {
-          date: point.date, equity: point.equity, change_pct: change_pct,
-          buys: entries_by_date[point.date]&.size || 0,
-          sells: exits_by_date[point.date]&.size || 0
-        }
-      end
-    end
-
-    def benchmark_series(benchmark, simulation)
-      dates = simulation.equity_curve.map(&:date)
-      first_price = benchmark.prices[dates.first]
-      dates.map { |date| [date.to_s, (simulation.starting_cash * benchmark.prices[date] / first_price).round(2)] }
     end
 
     def supported_stock_areas

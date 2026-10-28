@@ -152,21 +152,48 @@ class DailyRefreshTaskTest < ActiveSupport::TestCase
     assert_equal 1, events.count(:backup)
   end
 
+  test "precomputes the web history reports after the adjustment factors" do
+    market = { healthy: true, source_date: Date.new(2026, 7, 31) }
+    checker = Stock::DataStatus.allocate
+    events = []
+
+    checker.stub(:call, Stock::AREAS.index_with { market }) do
+      Stock::DataStatus.stub(:new, ->(*) { checker }) do
+        Stock::SignalSnapshot.stub(:capture!, 1) do
+          importer = ->(area:) { StubImporter.new(empty_report) { events << [:corporate_actions, area] } }
+          reports = -> { events << :reports; Stock::AREAS.index_with { {} } }
+          capture_io { invoke_daily_refresh(importer: importer, report_builder: reports) }
+        end
+      end
+    end
+
+    assert_equal [
+      [:corporate_actions, Stock::SZSTK],
+      [:corporate_actions, Stock::SHSTK],
+      [:corporate_actions, Stock::BJSTK],
+      :reports
+    ], events
+  end
+
   private
 
-  def invoke_daily_refresh(backup: -> {}, importer: nil)
+  def invoke_daily_refresh(backup: -> {}, importer: nil, report_builder: -> { [] })
     refresh_run = Stock::RefreshRun.new(
       lock_path: File.join(@refresh_directory, "refresh.lock"),
       status_path: File.join(@refresh_directory, "status.json")
     )
     # The refresh fetches the ex-rights records from the quote servers, and a
     # test has no business reaching the network: the step is stubbed here so
-    # that it never depends on a server answering.
+    # that it never depends on a server answering. The derived web report is
+    # stubbed for the same reason -- its real computation is covered by
+    # SignalHistoryReport's own tests.
     build = importer || ->(area:) { StubImporter.new(empty_report) }
     Stock::RefreshRun.stub(:new, ->(*) { refresh_run }) do
       Rake::Task[:database_backup].stub(:invoke, backup) do
         Stock::CorporateActionImporter.stub(:new, build) do
-          Rake::Task["daily_refresh"].invoke
+          Stock::SignalHistoryReport.stub(:rebuild_all, report_builder) do
+            Rake::Task["daily_refresh"].invoke
+          end
         end
       end
     end

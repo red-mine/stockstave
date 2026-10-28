@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_28_000000) do
   create_table "stock_corporate_actions", force: :cascade do |t|
     t.string "area", null: false
     t.float "bonus", default: 0.0, null: false
@@ -58,6 +58,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_000100) do
     t.string "stock", null: false
     t.datetime "updated_at", null: false
     t.index ["area", "stock", "date"], name: "index_price_anomalies_on_area_stock_date", unique: true
+  end
+
+  create_table "stock_signal_history_reports", force: :cascade do |t|
+    t.string "area", null: false
+    t.datetime "created_at", null: false
+    t.datetime "generated_at", null: false
+    t.datetime "inputs_updated_at"
+    t.text "payload", null: false
+    t.string "price_basis", null: false
+    t.integer "schema_version", null: false
+    t.date "source_date"
+    t.datetime "updated_at", null: false
+    t.index ["area"], name: "index_stock_signal_history_reports_on_area", unique: true
+    t.index ["source_date"], name: "index_stock_signal_history_reports_on_source_date"
   end
 
   create_table "stock_signal_snapshots", force: :cascade do |t|

@@ -807,6 +807,36 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
     assert_select ".performance-card", text: /No index data available for BJ/
   end
 
+  test "signal history reads a precomputed report instead of replaying it" do
+    performance = Stock::SignalPerformance::Report.new(
+      ready: false, dates: 0, horizon: 5, cohorts: [],
+      baseline: Stock::SignalPerformance::Baseline.new(average_return: nil, dates: 0, sample_size: 0)
+    )
+    simulation = Stock::StrategySimulation::Result.new(
+      ready: false, dates: 0, starting_cash: Stock::StrategySimulation::STARTING_CASH,
+      final_equity: Stock::StrategySimulation::STARTING_CASH, total_return: 0.0,
+      max_drawdown: 0.0, trades: [], equity_curve: [], anomalous_trades: 0
+    )
+
+    Stock::SignalPerformance.stub(:new, ->(*) { Struct.new(:call).new(performance) }) do
+      Stock::StrategySimulation.stub(:new, ->(*) { Struct.new(:call).new(simulation) }) do
+        Stock::PriceAdjustment.stub(:basis_for, ->(*) { :raw }) do
+          Stock::SignalHistoryReport.rebuild(Stock::SZSTK)
+        end
+      end
+    end
+
+    Stock::SignalPerformance.stub(:new, ->(*) { flunk "performance was recomputed" }) do
+      Stock::StrategySimulation.stub(:new, ->(*) { flunk "simulation was recomputed" }) do
+        get signal_history_path(area: Stock::SZSTK)
+      end
+    end
+
+    assert_response :success
+    assert_equal 1, StockSignalHistoryReport.count
+    assert_select ".history-card", count: 3
+  end
+
   test "signal history says which price basis the returns were measured on" do
     dates = 20.times.map { |index| Date.new(2026, 1, 1) + index }
     dates.each do |date|
