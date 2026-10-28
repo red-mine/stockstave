@@ -155,6 +155,8 @@ def main():
             events = json.load(f)
         dates, closes = E.read_day_file(path)
         keep = (dates >= a.beg) & (dates <= a.end) & (closes > 0)
+        if not keep.any():
+            continue                           # delisted before --beg
         frames.append(pd.DataFrame({"stock": code, "date": dates[keep].astype("int32"),
                                     "close": adjust(dates[keep], closes[keep], events)}))
     out = pd.concat(frames, ignore_index=True)
