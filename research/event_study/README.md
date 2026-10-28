@@ -35,8 +35,47 @@ python trend_filter.py $OUT $VIP
 #    walk forward one year at a time
 python replay.py $VIP $OUT/2012 --start 20120101
 python fetch_xdxr.py $VIP $OUT/2012 --beg 20111201
-python out_of_sample.py $OUT/2012 $VIP
+python out_of_sample.py $OUT/2012 $VIP --claims five_line_claims.json
 ```
+
+## Testing another idea
+
+The statistics are not tied to the five-line engine. A new idea needs only a
+script that writes `signals.parquet`; prices, returns, baselines, Newey-West
+errors, Holm correction, the holdout and the walk-forward are shared.
+
+`signals.parquet` has one row per (stock, date, window) for **every stock-day
+the rule could have picked from, signal or not**. Those rows are the baseline:
+excess return means "versus the other stocks available that day". Writing
+only the rows with a signal turns the baseline into a different population,
+which is how the first version of the study went wrong.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `stock` | str | `sz000001`, `sh600000`, `bj920001` ... |
+| `date` | int | `yyyymmdd`; entry is the next trading day's close |
+| `window` | str | a name for one variant of the rule |
+| `signal` | str | the reading that day, `""` for none |
+| `family` | str | optional grouping of signals; without it, five-line codes map through `engine.FAMILY` and any other signal is its own family |
+
+Windows and families are read from the data. Signals may be dated every
+trading day or only every k-th one; the overlap correction is scaled to the
+spacing. `momentum_signals.py` is a worked example (20-day momentum deciles,
+ranked every fifth day), using the adjusted prices built above:
+
+```bash
+P=$OUT/2012/adjusted.parquet
+python momentum_signals.py $P $OUT/momentum
+python analyze.py $OUT/momentum $VIP --prices $P --long TOP --short BOTTOM
+python out_of_sample.py $OUT/momentum $VIP --prices $P --long TOP --short BOTTOM \
+    --study 20210104-20261013 --holdout 20120101-20201231
+```
+
+Decide the claims and the holdout before looking at the holdout: write the
+findings into a claims file (see `five_line_claims.json` and the docstring
+of `out_of_sample.py`) from the study period alone, then run the holdout
+once. Judge the idea by the walk-forward net of costs against the market,
+not by the study-period tables.
 
 | File | Role |
 |---|---|
@@ -46,9 +85,11 @@ python out_of_sample.py $OUT/2012 $VIP
 | `replay.py` | Full-market replay, valid stock-days only |
 | `fetch_xdxr.py` | Ex-rights events from the TDX quote servers (pytdx) and the multiplicative adjustment of the engine's own TDX closes |
 | `fetch_adjusted.py` | Same adjustment from Sina hfq factors; used to cross-check `fetch_xdxr.py` |
-| `analyze.py` | Date-weighted excess returns, Newey-West errors, Holm correction |
+| `analyze.py` | Date-weighted excess returns, Newey-West errors, Holm correction; works on any `signals.parquet` |
 | `trend_filter.py` | Separates the trend and the price-level parts of the engine's slope filter |
-| `out_of_sample.py` | Reproduction check, 2012-2020 holdout of the report's findings, yearly walk-forward rule selection net of costs |
+| `out_of_sample.py` | Study-period tables, holdout test of a claims file, by-year results, yearly walk-forward rule selection net of costs |
+| `five_line_claims.json` | The report's findings, as tested in section 12 |
+| `momentum_signals.py` | Example signal source for a rule that is not the five-line engine |
 
 The TDX files are append-only, so pinning `--end` (default 2026-10-13) keeps
 the replay stable while the nightly refresh keeps adding days.

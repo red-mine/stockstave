@@ -196,7 +196,7 @@ python trend_filter.py ../../tmp/event_study ../../vipdoc     # 约 1 分钟，�
 # 第十二节：从 2012 年起重放，再做留出样本和逐年前推
 python replay.py ../../vipdoc ../../tmp/event_study_2012 --start 20120101
 python fetch_xdxr.py ../../vipdoc ../../tmp/event_study_2012 --beg 20111201
-python out_of_sample.py ../../tmp/event_study_2012 ../../vipdoc
+python out_of_sample.py ../../tmp/event_study_2012 ../../vipdoc --claims five_line_claims.json
 ```
 
 ## 十二、样本外检验

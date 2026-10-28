@@ -1,0 +1,11 @@
+[
+  {"text": "year BUY-SELL spread, entry, 5d  (study +0.35%, t 3.1)", "label": "year|BUY-SELL|entry", "h": 5, "sign": 1},
+  {"text": "year BUY-SELL spread, entry, 10d (study +0.65%, t 3.3)", "label": "year|BUY-SELL|entry", "h": 10, "sign": 1},
+  {"text": "year SELL vs model pool, 20d     (study -1.21%, t -2.8)", "label": "year|SELL|state|universe", "h": 20, "sign": -1},
+  {"text": "year BUY vs model pool, 60d      (study +0.51%, t 2.0)", "label": "year|BUY|state|universe", "h": 60, "sign": 1},
+  {"text": "lohas no-signal vs market, 60d   (study -2.9%,  t -3.2)", "label": "lohas|NONE|state|market", "h": 60, "sign": -1},
+  {"text": "year no-signal vs market, 60d    (trend filter, year)", "label": "year|NONE|state|market", "h": 60, "sign": -1},
+  {"text": "lohas BUY4 vs model pool, 20d    (study -1.40%, t -2.9)", "label": "lohas|code:BUY4", "h": 20, "sign": -1},
+  {"text": "lohas BUY5 vs model pool, 20d    (study negative)", "label": "lohas|code:BUY5", "h": 20, "sign": -1},
+  {"text": "year BUY5 vs model pool, 20d     (study negative)", "label": "year|code:BUY5", "h": 20, "sign": -1}
+]
