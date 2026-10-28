@@ -8,6 +8,12 @@ Shenzhen, Shanghai, and Beijing stocks.
 See [docs/lohas_stave_strategy.md](docs/lohas_stave_strategy.md) for the strategy,
 signal definitions, and known limitations.
 
+**Research verdict:** the signals do not predict returns well enough to trade.
+The event study's findings vanished on a 2012-2020 holdout, and a rule picked
+each year from past data lost to the market after costs in 11 of 14 years.
+See [docs/conclusion.md](docs/conclusion.md) (Chinese) for why, and
+[docs/event_study.md](docs/event_study.md) for the evidence.
+
 ## Requirements
 
 - Ruby 3.4.10
