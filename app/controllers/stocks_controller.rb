@@ -114,7 +114,7 @@ class StocksController < ApplicationController
   private
     def render_bad_request
       if request.format.json?
-        render json: { error: "Invalid stock search" }, status: :bad_request
+        render json: { error: t("error_pages.bad_request.api") }, status: :bad_request
       else
         render :bad_request, status: :bad_request
       end
@@ -122,7 +122,7 @@ class StocksController < ApplicationController
 
     def render_not_found
       if request.format.json?
-        render json: { error: "Stock not found" }, status: :not_found
+        render json: { error: t("error_pages.not_found.api") }, status: :not_found
       else
         render :not_found, status: :not_found
       end

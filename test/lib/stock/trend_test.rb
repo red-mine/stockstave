@@ -34,16 +34,22 @@ class StockTrendTest < ActiveSupport::TestCase
     assert_equal "uptrend", Stock::Trend.classify("0.03")
   end
 
+  # The band names are words for a reader, so they live in the locale file
+  # and the calculation hands back the key. A test that only checked the key
+  # would pass with a key that nothing can translate, so both are checked.
   test "labels each band" do
-    assert_equal "Strong uptrend", Stock::Trend.label("strong_uptrend")
-    assert_equal "Uptrend", Stock::Trend.label("uptrend")
-    assert_equal "Weak uptrend", Stock::Trend.label("weak_uptrend")
-    assert_equal "Flat", Stock::Trend.label("flat")
-    assert_equal "Downtrend", Stock::Trend.label("downtrend")
-    assert_equal "Unknown", Stock::Trend.label("unknown")
+    assert_equal :"trend.strong_uptrend", Stock::Trend.label("strong_uptrend")
+    assert_equal :"trend.uptrend", Stock::Trend.label("uptrend")
+    assert_equal :"trend.weak_uptrend", Stock::Trend.label("weak_uptrend")
+    assert_equal :"trend.flat", Stock::Trend.label("flat")
+    assert_equal :"trend.downtrend", Stock::Trend.label("downtrend")
+    assert_equal :"trend.unknown", Stock::Trend.label("unknown")
+
+    assert_equal "Strong uptrend", I18n.t(Stock::Trend.label("strong_uptrend"))
+    assert_equal "强势上升", I18n.t(Stock::Trend.label("strong_uptrend"), locale: :zh)
   end
 
-  test "falls back to a readable label for a status it does not know" do
-    assert_equal "Some new band", Stock::Trend.label("some_new_band")
+  test "falls back to the unknown band for a status it does not know" do
+    assert_equal :"trend.unknown", Stock::Trend.label("some_new_band")
   end
 end

@@ -17,6 +17,12 @@ module StockApp
     # processor avoids requiring the optional image_processing dependency.
     config.active_storage.variant_processor = :disabled
 
+    # The app reads in English by default and can be switched to Chinese. A
+    # language is a file under config/locales, not a branch in the code: the
+    # domain returns the key of a phrase and the view layer asks for it.
+    config.i18n.available_locales = %i[en zh]
+    config.i18n.default_locale = :en
+
     # Custom directories with classes and modules you want to be autoloadable.
     # config.autoloader = :zeitwerk
 

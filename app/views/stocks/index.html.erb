@@ -1,26 +1,26 @@
 <main class="app-shell">
   <header class="app-header">
     <div>
-      <p class="eyebrow">LOHAS market analysis</p>
-      <h1>Stock Stave</h1>
-      <p class="subtitle">Trend, channel, and signal analysis across China’s major exchanges.</p>
+      <p class="eyebrow"><%= t("home.eyebrow") %></p>
+      <h1><%= t("app.name") %></h1>
+      <p class="subtitle"><%= t("home.subtitle") %></p>
     </div>
-    <nav class="market-tabs" aria-label="Stock market">
+    <nav class="market-tabs" aria-label="<%= t("nav.market") %>">
       <%= market_navigation(@area) %>
     </nav>
   </header>
 
-  <section class="toolbar" aria-label="Stock search">
+  <section class="toolbar" aria-label="<%= t("search.section") %>">
     <%= form_tag(stocks_by_area_path(@area), method: "get", class: "search-form") do %>
       <div class="search-copy">
-        <%= label_tag(:stock, "Find a stock") %>
-        <span id="stock-search-help">Search by full code or a partial symbol</span>
+        <%= label_tag(:stock, t("search.label")) %>
+        <span id="stock-search-help"><%= t("search.help") %></span>
       </div>
       <div class="search-controls">
-        <%= text_field_tag(:stock, @stock, placeholder: "e.g. #{@area}000001", maxlength: 8, autocomplete: "off", autocapitalize: "none", spellcheck: false, inputmode: "search", enterkeyhint: "search", aria: { describedby: "stock-search-help" }) %>
-        <%= submit_tag("Search", class: "button button-primary") %>
+        <%= text_field_tag(:stock, @stock, placeholder: t("search.placeholder", area: @area), maxlength: 8, autocomplete: "off", autocapitalize: "none", spellcheck: false, inputmode: "search", enterkeyhint: "search", aria: { describedby: "stock-search-help" }) %>
+        <%= submit_tag(t("search.submit"), class: "button button-primary") %>
         <% if @stock %>
-          <%= link_to "Clear search", stocks_by_area_path(@area), class: "button button-secondary clear-search" %>
+          <%= link_to t("search.clear"), stocks_by_area_path(@area), class: "button button-secondary clear-search" %>
         <% end %>
       </div>
     <% end %>
@@ -31,39 +31,39 @@
       <% recency = data_recency(@stavs_date) %>
       <div class="buy-heading">
         <div>
-          <p class="eyebrow">Strongest model agreement</p>
-          <h2 id="buy-candidates-title">Buy candidates</h2>
-          <p>Current buy-family signals ranked by agreement, trend direction, and channel position. The score measures technical agreement—not the probability of profit.</p>
-          <%= link_to "Jump to buy/sell signals ↓", "#current-signals", class: "mobile-signal-jump" %>
+          <p class="eyebrow"><%= t("home.buy.eyebrow") %></p>
+          <h2 id="buy-candidates-title"><%= t("home.buy.title") %></h2>
+          <p><%= t("home.buy.description") %></p>
+          <%= link_to t("home.buy.jump_to_signals"), "#current-signals", class: "mobile-signal-jump" %>
         </div>
         <div class="model-status">
           <span class="data-status data-status-<%= recency[:tone] %>"><%= recency[:label] %></span>
-          <span class="model-date">Model date <strong><%= @stavs_date || "Unavailable" %></strong></span>
+          <span class="model-date"><%= t("home.status.model_date") %> <strong><%= @stavs_date || t("common.unavailable") %></strong></span>
           <% if @refresh_status[:state] == "succeeded" %>
             <% refresh_date = refresh_finished_date(@refresh_status[:finished_at]) %>
             <% duration = refresh_duration(@refresh_status) %>
-            <span class="refresh-status"><%= @refresh_status[:source] == "scheduled" ? "Scheduled refresh verified" : "Refresh verified" %><%= " #{refresh_date}" if refresh_date %><%= " in #{duration}" if duration %><%= " after recovering an expired lock" if @refresh_status[:recovered_stale_lock] %></span>
+            <span class="refresh-status"><%= @refresh_status[:source] == "scheduled" ? t("home.status.scheduled_refresh_verified") : t("home.status.refresh_verified") %><%= t("home.status.date", date: refresh_date) if refresh_date %><%= t("home.status.duration", duration: duration) if duration %><%= t("home.status.recovered") if @refresh_status[:recovered_stale_lock] %></span>
           <% elsif @refresh_status[:state] == "running" %>
-            <span class="refresh-status is-running">Daily refresh is running</span>
+            <span class="refresh-status is-running"><%= t("home.status.running") %></span>
           <% elsif @refresh_status[:state] == "failed" %>
-            <span class="refresh-status is-failed">Last daily refresh failed</span>
+            <span class="refresh-status is-failed"><%= t("home.status.failed") %></span>
           <% end %>
           <% if @refresh_status[:source] != "scheduled" %>
             <% if @scheduled_refresh_status[:state] == "succeeded" %>
               <% scheduled_date = refresh_finished_date(@scheduled_refresh_status[:finished_at]) %>
               <% scheduled_duration = refresh_duration(@scheduled_refresh_status) %>
-              <span class="refresh-status scheduled-refresh-status">Scheduled refresh verified<%= " #{scheduled_date}" if scheduled_date %><%= " in #{scheduled_duration}" if scheduled_duration %></span>
+              <span class="refresh-status scheduled-refresh-status"><%= t("home.status.scheduled_refresh_verified") %><%= t("home.status.date", date: scheduled_date) if scheduled_date %><%= t("home.status.duration", duration: scheduled_duration) if scheduled_duration %></span>
             <% elsif @scheduled_refresh_status[:state] == "running" %>
-              <span class="refresh-status scheduled-refresh-status is-running">Scheduled refresh is running</span>
+              <span class="refresh-status scheduled-refresh-status is-running"><%= t("home.status.scheduled_running") %></span>
             <% elsif @scheduled_refresh_status[:state] == "failed" %>
               <% scheduled_date = refresh_finished_date(@scheduled_refresh_status[:finished_at]) %>
-              <span class="refresh-status scheduled-refresh-status is-failed">Last scheduled refresh failed<%= " #{scheduled_date}" if scheduled_date %></span>
+              <span class="refresh-status scheduled-refresh-status is-failed"><%= t("home.status.scheduled_failed") %><%= t("home.status.date", date: scheduled_date) if scheduled_date %></span>
             <% end %>
           <% end %>
           <% if @refresh_schedule[:enabled] && @refresh_schedule[:time].present? %>
-            <span class="refresh-schedule">Automatic refresh daily at <strong><%= @refresh_schedule[:time] %></strong></span>
+            <span class="refresh-schedule"><%= t("home.status.schedule") %><strong><%= @refresh_schedule[:time] %></strong></span>
           <% end %>
-          <%= link_to "View signal history →", signal_history_path(area: @area), class: "history-shortcut" %>
+          <%= link_to t("home.history_link"), signal_history_path(area: @area), class: "history-shortcut" %>
         </div>
       </div>
       <% if @buy_candidates.any? %>
@@ -73,7 +73,7 @@
               <div class="buy-card-top">
                 <strong><%= candidate.stock.upcase %></strong>
                 <div class="candidate-labels">
-                  <span class="candidate-history candidate-history-<%= candidate.history_state.parameterize %>"><%= candidate.history_state %></span>
+                  <span class="candidate-history candidate-history-<%= candidate.history_slug.to_s.dasherize %>"><%= t(candidate.history_state) %></span>
                   <% candidate_trend = classify_trend(candidate.year) %>
                   <span class="candidate-trend trend-<%= candidate_trend %>"><%= trend_status_label(candidate_trend) %></span>
                   <span><%= candidate.year_signal %> + <%= candidate.lohas_signal %></span>
@@ -83,56 +83,59 @@
                 </div>
               </div>
               <div class="candidate-score-row">
-                <p class="candidate-price"><small>Dataset price</small><%= formatted_number(candidate.price) %></p>
-                <p class="candidate-score"><strong><%= candidate.score %></strong><small>/100 agreement · <%= candidate.confidence %></small></p>
+                <p class="candidate-price"><small><%= t("home.buy.dataset_price") %></small><%= formatted_number(candidate.price) %></p>
+                <p class="candidate-score"><strong><%= candidate.score %></strong><small><%= t("home.buy.agreement_of") %><%= t(candidate.confidence) %></small></p>
               </div>
-              <p class="candidate-reason"><%= candidate.reasons.first %></p>
-              <p class="candidate-invalidation">Recheck if the signal changes to wait or sell.</p>
+              <p class="candidate-reason"><%= t(candidate.reasons.first) %></p>
+              <p class="candidate-invalidation"><%= t("home.buy.invalidation") %></p>
               <details class="candidate-details">
-                <summary>Why this score?</summary>
+                <summary><%= t("home.buy.why_score") %></summary>
                 <ul>
                   <% candidate.reasons.each do |reason| %>
-                    <li><%= reason %></li>
+                    <li><%= t(reason) %></li>
                   <% end %>
                 </ul>
               </details>
               <div class="candidate-mobile-reasons">
-                <strong>Why this score</strong>
+                <strong><%= t("home.buy.why_score_short") %></strong>
                 <ul>
                   <% candidate.reasons.each do |reason| %>
-                    <li><%= reason %></li>
+                    <li><%= t(reason) %></li>
                   <% end %>
                 </ul>
               </div>
-              <%= link_to "Open analysis →", stock_analysis_path(candidate.stock, area: @area, return_to: "buy-candidates"), class: "candidate-open" %>
+              <%= link_to t("home.buy.open_analysis"), stock_analysis_path(candidate.stock, area: @area, return_to: "buy-candidates"), class: "candidate-open" %>
             </article>
           <% end %>
         </div>
       <% else %>
-        <p class="no-candidates">No strongest-agreement candidates in this market today. Do not force a trade.</p>
+        <p class="no-candidates"><%= t("home.buy.no_candidates") %></p>
       <% end %>
-      <p class="risk-note">Agreement score ≠ expected return. Model shortlist only—not a guarantee or personalized financial advice. <%= link_to "View signal history →", signal_history_path(area: @area) %></p>
+      <p class="risk-note"><%= t("home.risk_note") %> <%= link_to t("home.history_link"), signal_history_path(area: @area) %></p>
     </section>
   <% end %>
 
   <section class="panel signal-panel" id="current-signals">
     <div class="panel-heading">
       <div>
-        <p class="eyebrow"><%= @area.upcase %> market</p>
-        <h2>Current signals</h2>
+        <p class="eyebrow"><%= t("home.signals.eyebrow", area: @area.upcase) %></p>
+        <h2><%= t("home.signals.title") %></h2>
         <% if @stock %>
-          <p class="search-summary"><strong><%= @result_count %></strong> result<%= "s" unless @result_count == 1 %> matching “<%= @stock.upcase %>”</p>
+          <p class="search-summary"><strong><%= @result_count %></strong> <%= t(@result_count == 1 ? "home.signals.result_summary_one" : "home.signals.result_summary_other", stock: @stock.upcase) %></p>
         <% end %>
       </div>
       <div class="panel-meta">
-        <p class="as-of">Data date <strong><%= @stavs_date || "Unavailable" %></strong></p>
-        <%= link_to "Open signal guide →", signal_guide_path(area: @area), class: "guide-link" %>
+        <p class="as-of"><%= t("home.signals.data_date") %> <strong><%= @stavs_date || t("common.unavailable") %></strong></p>
+        <%= link_to t("home.signals.open_guide"), signal_guide_path(area: @area), class: "guide-link" %>
       </div>
     </div>
 
     <% unless @stock %>
-      <nav class="signal-filters" aria-label="Filter signals">
-        <% { "all" => "All", "buy" => "Buy agreement", "sell" => "Sell alert", "watch" => "Watch" }.each do |value, label| %>
+      <nav class="signal-filters" aria-label="<%= t("home.signals.filter_aria") %>">
+        <% { "all" => t("home.signals.filters.all"),
+             "buy" => t(Stock::SignalFamily.label("buy")),
+             "sell" => t(Stock::SignalFamily.label("sell")),
+             "watch" => t(Stock::SignalFamily.label("watch")) }.each do |value, label| %>
           <%= link_to stocks_by_area_path(@area, signal: value, anchor: "current-signals"), class: ["signal-filter", ("is-active" if @signal_filter == value)], aria: { current: ("page" if @signal_filter == value) } do %>
             <span><%= label %></span><strong><%= @signal_counts.fetch(value) %></strong>
           <% end %>
@@ -141,21 +144,21 @@
     <% end %>
 
     <% if @stocks_stavs.any? %>
-      <p class="mobile-table-note">Tap a stock for price, trend, channel, and chart details.</p>
+      <p class="mobile-table-note"><%= t("home.signals.table_note") %></p>
       <div class="table-scroll">
         <table class="stock-table">
           <thead>
             <tr>
-              <th>Stock</th>
-              <th>Year signal</th>
-              <th>LOHAS signal</th>
-              <th class="metric-column">Long trend</th>
-              <th class="metric-column">1-year trend</th>
-              <th class="metric-column">Price</th>
-              <th class="metric-column">1Y channel</th>
-              <th class="metric-column">1Y stave</th>
-              <th class="metric-column">3.5Y channel</th>
-              <th class="metric-column">3.5Y stave</th>
+              <th><%= t("home.signals.table.stock") %></th>
+              <th><%= t("home.signals.table.year_signal") %></th>
+              <th><%= t("home.signals.table.lohas_signal") %></th>
+              <th class="metric-column"><%= t("home.signals.table.long_trend") %></th>
+              <th class="metric-column"><%= t("home.signals.table.year_trend") %></th>
+              <th class="metric-column"><%= t("home.signals.table.price") %></th>
+              <th class="metric-column"><%= t("home.signals.table.channel_1y") %></th>
+              <th class="metric-column"><%= t("home.signals.table.stave_1y") %></th>
+              <th class="metric-column"><%= t("home.signals.table.channel_3_5y") %></th>
+              <th class="metric-column"><%= t("home.signals.table.stave_3_5y") %></th>
             </tr>
           </thead>
           <tbody>
@@ -163,13 +166,13 @@
               <% historical = stock.date.present? && @stavs_date.present? && stock.date < @stavs_date %>
               <tr class="<%= "is-historical" if historical %>">
                 <td class="stock-code">
-                  <%= link_to stock_analysis_path(stock.stock, area: @area), aria: { label: "Open #{stock.stock.upcase} analysis" } do %>
+                  <%= link_to stock_analysis_path(stock.stock, area: @area), aria: { label: t("common.open_analysis_aria", stock: stock.stock.upcase) } do %>
                     <span><%= stock.stock.upcase %></span>
                     <span class="stock-open-arrow" aria-hidden="true">→</span>
                   <% end %>
                   <% if historical %>
-                    <span class="historical-label">Historical</span>
-                    <span class="historical-date">Ended <%= stock.date %></span>
+                    <span class="historical-label"><%= t("home.signals.historical") %></span>
+                    <span class="historical-date"><%= t("home.signals.ended_on", date: stock.date) %></span>
                   <% end %>
                 </td>
                 <td class="signal-cell"><%= linked_signal_badge(stock.year_signal, return_filter: @signal_filter) %></td>
@@ -188,9 +191,9 @@
       </div>
     <% else %>
       <div class="empty-state">
-        <h3><%= @stock ? "No matching signals" : "No signals in this group" %></h3>
-        <p><%= @stock ? "Try another stock code or clear the search to see all current results." : "Choose another filter or wait for the next daily refresh." %></p>
-        <%= link_to(@stock ? "Clear search" : "Show all", stocks_by_area_path(@area), class: "button button-secondary") %>
+        <h3><%= @stock ? t("home.signals.empty_title_search") : t("home.signals.empty_title_group") %></h3>
+        <p><%= @stock ? t("home.signals.empty_body_search") : t("home.signals.empty_body_group") %></p>
+        <%= link_to(@stock ? t("search.clear") : t("home.signals.show_all"), stocks_by_area_path(@area), class: "button button-secondary") %>
       </div>
     <% end %>
   </section>

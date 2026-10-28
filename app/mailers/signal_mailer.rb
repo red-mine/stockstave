@@ -6,8 +6,10 @@ class SignalMailer < ApplicationMailer
     @base_url = ENV["STAVE_HOST"].to_s.sub(%r{/+\z}, "").presence
     @families = %w[buy sell watch].index_with { |family| report.events.select { |event| event.family == family } }
 
-    subject = +"Stock Stave #{report.area.upcase} signal changes"
-    subject << " #{report.signal_date}: #{report.buys.size} buy, #{report.sells.size} sell" if report.signal_date
+    subject = +t("mailer.subject", area: report.area.upcase)
+    if report.signal_date
+      subject << " #{t('mailer.subject_detail', date: report.signal_date, buys: report.buys.size, sells: report.sells.size)}"
+    end
 
     mail(
       to: ENV["STAVE_NOTIFY_EMAIL"].presence || "stave@localhost",

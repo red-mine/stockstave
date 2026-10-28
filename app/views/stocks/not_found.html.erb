@@ -1,8 +1,8 @@
 <main class="status-page">
   <div class="status-card">
     <p class="status-code">404</p>
-    <h1>Stock not found</h1>
-    <p>The stock code is invalid or is not available in the selected market.</p>
-    <%= link_to "Return to market signals", stocks_by_area_path(@area), class: "button button-primary" %>
+    <h1><%= t("error_pages.not_found.title") %></h1>
+    <p><%= t("error_pages.not_found.body") %></p>
+    <%= link_to t("error_pages.not_found.back"), stocks_by_area_path(@area), class: "button button-primary" %>
   </div>
 </main>

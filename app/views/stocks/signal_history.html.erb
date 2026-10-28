@@ -1,37 +1,37 @@
 <main class="app-shell history-page">
-  <%= link_to "← Back to #{@area.upcase} signals", stocks_by_area_path(@area), class: "back-link" %>
+  <%= link_to t("common.back_to_signals", area: @area.upcase), stocks_by_area_path(@area), class: "back-link" %>
 
   <header class="guide-header">
-    <p class="eyebrow">Measured evidence</p>
-    <h1>Signal history</h1>
-    <p class="subtitle">Daily snapshots preserve what the model actually knew at the time. This prevents future performance reports from accidentally using information from the future.</p>
+    <p class="eyebrow"><%= t("history.eyebrow") %></p>
+    <h1><%= t("history.title") %></h1>
+    <p class="subtitle"><%= t("history.subtitle") %></p>
   </header>
 
-  <p class="performance-warning method-note">Outcomes are measured the way the event study measures them. Each signal is entered at the close <em>after</em> the signal date — the signal is derived from that day's close, so that close is not tradable — and is compared against the model pool of the same day: the stocks the strategy could have picked then, signal or not. Excess is the date-weighted difference between the two, so a cohort that merely rose with the market has earned nothing.
+  <p class="performance-warning method-note"><%= t("history.method_note_html") %>
     <% if @price_basis == :adjusted %>
-      Returns are measured on dividend- and split-adjusted closes — the prices a shareholder would actually have seen — so a dividend or a bonus share no longer reads as a loss. The signals themselves are still derived from the raw close.
+      <%= t("history.basis_adjusted") %>
     <% else %>
-      Returns are measured on raw closes: no corporate-action records are loaded for <%= @area.upcase %>, so a dividend or a bonus share still reads as a loss.
+      <%= t("history.basis_raw", area: @area.upcase) %>
     <% end %>
   </p>
 
-  <section class="history-grid" aria-label="Snapshot coverage by market">
+  <section class="history-grid" aria-label="<%= t("history.grid_aria") %>">
     <% @history.each do |area, status| %>
       <article class="history-card">
         <div class="history-card-heading">
           <strong><%= area.upcase %></strong>
-          <span class="history-state <%= status[:ready] ? "is-ready" : "is-collecting" %>"><%= status[:ready] ? "Ready to measure" : "Collecting" %></span>
+          <span class="history-state <%= status[:ready] ? "is-ready" : "is-collecting" %>"><%= status[:ready] ? t("history.ready") : t("history.collecting") %></span>
         </div>
         <dl>
-          <div><dt>Trading dates</dt><dd><%= status[:dates] %></dd></div>
-          <div><dt>Snapshot rows</dt><dd><%= status[:rows] %></dd></div>
-          <div><dt>Stocks covered</dt><dd><%= status[:stocks] %></dd></div>
-          <div><dt>Latest date</dt><dd><%= status[:latest_date] || "None yet" %></dd></div>
+          <div><dt><%= t("history.metrics.trading_dates") %></dt><dd><%= status[:dates] %></dd></div>
+          <div><dt><%= t("history.stats.snapshot_rows") %></dt><dd><%= status[:rows] %></dd></div>
+          <div><dt><%= t("history.stats.stocks_covered") %></dt><dd><%= status[:stocks] %></dd></div>
+          <div><dt><%= t("history.stats.latest_date") %></dt><dd><%= status[:latest_date] || t("history.none_yet") %></dd></div>
         </dl>
         <% if status[:ready] %>
-          <p>There is enough initial history to begin short-horizon outcome reporting.</p>
+          <p><%= t("history.enough") %></p>
         <% else %>
-          <p><strong><%= @minimum_dates - status[:dates] %></strong> more trading-date snapshots are needed before showing an initial win-rate report.</p>
+          <p><%= t("history.more_needed_html", count: @minimum_dates - status[:dates]) %></p>
         <% end %>
       </article>
     <% end %>
@@ -41,19 +41,19 @@
     <section class="performance-panel" aria-labelledby="performance-title">
       <div class="performance-heading">
         <div>
-          <p class="eyebrow">Observed outcomes</p>
-          <h2 id="performance-title"><%= @performance.horizon %>-day signal performance</h2>
+          <p class="eyebrow"><%= t("history.performance.eyebrow") %></p>
+          <h2 id="performance-title"><%= t("history.performance.title", horizon: @performance.horizon) %></h2>
         </div>
-        <span><%= @performance.dates %> trading dates recorded</span>
+        <span><%= t("history.trading_dates_recorded", dates: @performance.dates) %></span>
       </div>
-      <p class="performance-warning">Historical observations are evidence, not a forecast. Overlapping holding periods are included, and transaction costs are not yet deducted.</p>
+      <p class="performance-warning"><%= t("history.performance.warning") %></p>
       <div class="performance-grid">
         <% if @performance.baseline.average_return %>
           <article class="performance-card">
-            <strong>Model pool</strong>
+            <strong><%= t("history.performance.model_pool") %></strong>
             <dl>
-              <div><dt>Average return</dt><dd><%= @performance.baseline.average_return %>%</dd></div>
-              <div><dt>Trading dates</dt><dd><%= @performance.baseline.dates %></dd></div>
+              <div><dt><%= t("history.metrics.average_return") %></dt><dd><%= @performance.baseline.average_return %>%</dd></div>
+              <div><dt><%= t("history.metrics.trading_dates") %></dt><dd><%= @performance.baseline.dates %></dd></div>
             </dl>
           </article>
         <% end %>
@@ -61,13 +61,13 @@
           <article class="performance-card">
             <strong><%= cohort.year_signal %> + <%= cohort.lohas_signal %></strong>
             <dl>
-              <div><dt>Observations</dt><dd><%= cohort.sample_size %></dd></div>
-              <div><dt>Win rate</dt><dd><%= cohort.win_rate %>%</dd></div>
-              <div><dt>Average return</dt><dd><%= cohort.average_return %>%</dd></div>
-              <div><dt>Average drawdown</dt><dd><%= cohort.average_drawdown %>%</dd></div>
+              <div><dt><%= t("history.metrics.observations") %></dt><dd><%= cohort.sample_size %></dd></div>
+              <div><dt><%= t("history.metrics.win_rate") %></dt><dd><%= cohort.win_rate %>%</dd></div>
+              <div><dt><%= t("history.metrics.average_return") %></dt><dd><%= cohort.average_return %>%</dd></div>
+              <div><dt><%= t("history.metrics.average_drawdown") %></dt><dd><%= cohort.average_drawdown %>%</dd></div>
               <% if cohort.excess_return %>
-                <div><dt>Pool return</dt><dd><%= cohort.baseline_return %>%</dd></div>
-                <div><dt>Excess vs pool</dt><dd><%= cohort.excess_return %>%</dd></div>
+                <div><dt><%= t("history.metrics.pool_return") %></dt><dd><%= cohort.baseline_return %>%</dd></div>
+                <div><dt><%= t("history.metrics.excess_vs_pool") %></dt><dd><%= cohort.excess_return %>%</dd></div>
               <% end %>
             </dl>
           </article>
@@ -80,57 +80,57 @@
     <section class="performance-panel" aria-labelledby="simulation-title">
       <div class="performance-heading">
         <div>
-          <p class="eyebrow">Full account simulation</p>
-          <h2 id="simulation-title">Strategy simulation</h2>
+          <p class="eyebrow"><%= t("history.simulation.eyebrow") %></p>
+          <h2 id="simulation-title"><%= t("history.simulation.title") %></h2>
         </div>
-        <span><%= @simulation.dates %> trading dates recorded</span>
+        <span><%= t("history.trading_dates_recorded", dates: @simulation.dates) %></span>
       </div>
-      <p class="performance-warning">Buys are filled at the close <em>after</em> the "Buy agreement" appears — the signal is derived from the close that produced it, so that same close is not tradable. Equal-weight across at most <%= Stock::StrategySimulation::MAX_POSITIONS %> concurrent positions, forced exit after <%= Stock::StrategySimulation::MAX_HOLD_DAYS %> trading days without a "Sell alert". Assumes <%= number_to_percentage(Stock::StrategySimulation::BUY_COST_RATE * 100, precision: 2) %> commission on buys and <%= number_to_percentage(Stock::StrategySimulation::SELL_COST_RATE * 100, precision: 2) %> commission + stamp duty on sells. When more stocks signal than there are slots, selection is by stock code, not by expected return.</p>
+      <p class="performance-warning"><%= t("history.simulation.warning_html", positions: Stock::StrategySimulation::MAX_POSITIONS, hold_days: Stock::StrategySimulation::MAX_HOLD_DAYS, buy_cost: number_to_percentage(Stock::StrategySimulation::BUY_COST_RATE * 100, precision: 2), sell_cost: number_to_percentage(Stock::StrategySimulation::SELL_COST_RATE * 100, precision: 2)) %></p>
 
       <div class="performance-grid">
         <article class="performance-card">
-          <strong>Account</strong>
+          <strong><%= t("history.simulation.account.title") %></strong>
           <dl>
-            <div><dt>Starting cash</dt><dd><%= number_with_precision(@simulation.starting_cash, precision: 2) %></dd></div>
-            <div><dt>Final equity</dt><dd><%= number_with_precision(@simulation.final_equity, precision: 2) %></dd></div>
-            <div><dt>Total return</dt><dd><%= @simulation.total_return %>%</dd></div>
-            <div><dt>Max drawdown</dt><dd><%= @simulation.max_drawdown %>%</dd></div>
+            <div><dt><%= t("history.simulation.account.starting_cash") %></dt><dd><%= number_with_precision(@simulation.starting_cash, precision: 2) %></dd></div>
+            <div><dt><%= t("history.simulation.account.final_equity") %></dt><dd><%= number_with_precision(@simulation.final_equity, precision: 2) %></dd></div>
+            <div><dt><%= t("history.simulation.account.total_return") %></dt><dd><%= @simulation.total_return %>%</dd></div>
+            <div><dt><%= t("history.simulation.account.max_drawdown") %></dt><dd><%= @simulation.max_drawdown %>%</dd></div>
           </dl>
         </article>
         <article class="performance-card">
-          <strong>Trades</strong>
+          <strong><%= t("history.simulation.trades.title") %></strong>
           <dl>
-            <div><dt>Trades closed</dt><dd><%= @simulation.trades.size %></dd></div>
-            <div><dt>Win rate</dt><dd><%= @simulation.trades.any? ? "#{(@simulation.trades.count { |trade| trade.return_pct.positive? }.fdiv(@simulation.trades.size) * 100).round(2)}%" : "—" %></dd></div>
+            <div><dt><%= t("history.simulation.trades.closed") %></dt><dd><%= @simulation.trades.size %></dd></div>
+            <div><dt><%= t("history.simulation.trades.win_rate") %></dt><dd><%= @simulation.trades.any? ? "#{(@simulation.trades.count { |trade| trade.return_pct.positive? }.fdiv(@simulation.trades.size) * 100).round(2)}%" : t("common.dash") %></dd></div>
             <% if @simulation.anomalous_trades.positive? %>
-              <div><dt>Flagged trades</dt><dd><%= @simulation.anomalous_trades %></dd></div>
+              <div><dt><%= t("history.simulation.trades.flagged") %></dt><dd><%= @simulation.anomalous_trades %></dd></div>
             <% end %>
           </dl>
           <% if @simulation.anomalous_trades.positive? %>
-            <p><%= @simulation.anomalous_trades %> trade(s) cover a day whose adjusted move no board would allow. That day means an adjustment factor is wrong, so the return across it is reported but not trusted.</p>
+            <p><%= t("history.simulation.trades.flagged_explanation", count: @simulation.anomalous_trades) %></p>
           <% end %>
         </article>
         <article class="performance-card">
-          <strong>Benchmark</strong>
+          <strong><%= t("history.simulation.benchmark.title") %></strong>
           <% if @benchmark.available %>
             <dl>
-              <div><dt>Index</dt><dd><%= @benchmark.index_code %></dd></div>
-              <div><dt>Buy &amp; hold return</dt><dd><%= @benchmark.total_return %>%</dd></div>
-              <div><dt>Strategy vs. index</dt><dd><%= (@simulation.total_return - @benchmark.total_return).round(2) %>pp</dd></div>
+              <div><dt><%= t("history.simulation.benchmark.index") %></dt><dd><%= @benchmark.index_code %></dd></div>
+              <div><dt><%= t("history.simulation.benchmark.buy_and_hold") %></dt><dd><%= @benchmark.total_return %>%</dd></div>
+              <div><dt><%= t("history.simulation.benchmark.vs_index") %></dt><dd><%= (@simulation.total_return - @benchmark.total_return).round(2) %>pp</dd></div>
             </dl>
           <% else %>
-            <p>No index data available for <%= @area.upcase %>.</p>
+            <p><%= t("history.simulation.benchmark.unavailable", area: @area.upcase) %></p>
           <% end %>
         </article>
       </div>
 
       <div class="chart-card">
         <div class="chart-heading">
-          <div><p class="eyebrow">Equity curve</p><h2>Simulated account value vs. buy &amp; hold</h2></div>
+          <div><p class="eyebrow"><%= t("history.simulation.equity_curve_eyebrow") %></p><h2><%= t("history.simulation.equity_curve_title") %></h2></div>
         </div>
         <%
-          chart_series = [{ name: "Strategy", data: @simulation.equity_curve.map { |point| [point.date.to_s, point.equity] } }]
-          chart_series << { name: "Index (buy & hold)", data: @benchmark_series } if @benchmark.available
+          chart_series = [{ name: t("history.simulation.series.strategy"), data: @simulation.equity_curve.map { |point| [point.date.to_s, point.equity] } }]
+          chart_series << { name: t("history.simulation.series.index"), data: @benchmark_series } if @benchmark.available
         %>
         <%= line_chart chart_series, height: "320px", points: false %>
       </div>
@@ -139,11 +139,11 @@
         <table class="stock-table">
           <thead>
             <tr>
-              <th>Date</th>
-              <th class="metric-column">Equity</th>
-              <th class="metric-column">Change</th>
-              <th class="metric-column">Buys</th>
-              <th class="metric-column">Sells</th>
+              <th><%= t("history.simulation.table.date") %></th>
+              <th class="metric-column"><%= t("history.simulation.table.equity") %></th>
+              <th class="metric-column"><%= t("history.simulation.table.change") %></th>
+              <th class="metric-column"><%= t("history.simulation.table.buys") %></th>
+              <th class="metric-column"><%= t("history.simulation.table.sells") %></th>
             </tr>
           </thead>
           <tbody>
@@ -163,7 +163,7 @@
   <% end %>
 
   <section class="history-note">
-    <h2>Why wait?</h2>
-    <p>A single successful stock does not prove that a signal works. The system will wait for at least <%= @minimum_dates %> trading dates, then report sample size, average return, win rate, and drawdown together—not just the best outcomes.</p>
+    <h2><%= t("history.why_wait.title") %></h2>
+    <p><%= t("history.why_wait.body", count: @minimum_dates) %></p>
   </section>
 </main>

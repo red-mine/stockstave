@@ -1,0 +1,393 @@
+# The Chinese rendering of config/locales/en.yml. The keys are identical by
+# contract: a test (test/lib/stock/locale_completeness_test.rb) fails if the
+# two files ever drift apart.
+#
+# The terminology follows docs/event_study.md, which is the research side of
+# this app and already writes about these signals in Chinese.
+zh:
+  app:
+    name: "Stock Stave"
+    tagline: "覆盖中国主要交易所的趋势、通道与信号分析。"
+  locale:
+    label: "语言"
+    switch_to_english: "Switch to English"
+    switch_to_chinese: "切换到中文"
+  common:
+    unavailable: "暂无"
+    unknown: "未知"
+    dash: "—"
+    back_to_signals: "← 返回 %{area} 信号"
+    open_analysis_aria: "打开 %{stock} 分析"
+    open_signal_guide: "打开 %{label} 的信号指南"
+    date_range_unavailable: "暂无日期区间"
+  nav:
+    market: "股票市场"
+  search:
+    label: "查找股票"
+    section: "股票搜索"
+    help: "输入完整代码或部分代码"
+    placeholder: "例如 %{area}000001"
+    submit: "搜索"
+    clear: "清除搜索"
+  data_recency:
+    recent: "最新"
+    stale: "需要更新"
+    unknown: "暂无"
+  actions:
+    buy: "买入"
+    hold: "持有"
+    sell: "卖出"
+    wait: "等待"
+    avoid: "回避"
+    signal: "信号"
+    no_signal: "无信号"
+  signal_family:
+    buy: "买入一致"
+    sell: "卖出警报"
+    watch: "观望"
+    explanation:
+      buy: "两个窗口的记录信号都属买入族。"
+      sell: "至少一个窗口的记录信号属卖出族。"
+      watch: "既没有两个窗口一致的买入，也没有卖出警报。"
+  trend:
+    strong_uptrend: "强势上升"
+    uptrend: "上升"
+    weak_uptrend: "弱上升"
+    flat: "走平"
+    downtrend: "下降"
+    unknown: "未知"
+  candidates:
+    confidence:
+      strong: "强"
+      moderate: "中等"
+      cautious: "谨慎"
+    history:
+      first_recorded: "首次记录"
+      still_active: "仍然有效"
+      new_buy_signal: "新买入信号"
+    reasons:
+      both_buy_family: "两个窗口都处于买入族信号"
+      both_trends_rising: "两个测得趋势都在上升"
+      position_supported: "两个窗口的价格位置都得到支撑"
+      same_signal: "两个窗口给出同一个信号"
+      balanced_trends: "短期与长期趋势强度大致均衡"
+  fundamentals:
+    verdict:
+      pass: "基本面稳健"
+      fail: "基本面偏弱"
+      unknown: "基本面未核验"
+    check:
+      roe: "ROE（年化）"
+      revenue_yoy: "营收同比"
+      profit_yoy: "净利同比"
+    no_data: "%{name}：暂无数据（需要 ≥ %{threshold}%%）"
+    not_fetched: "尚未抓取基本面数据。请运行 bin/rails fundamentals_refresh。"
+    report_period: "报告期：%{date}"
+    fetched_on: "抓取于：%{date}"
+  signal_catalog:
+    SAF1:
+      action: "买入区"
+      detail: "安全买入区"
+      stave: "-2SD 与 -1SD 之间"
+      channel: "下半区，仍在通道内"
+      summary: "相对趋势偏低，但未跌破通道下轨。"
+    SOX2:
+      action: "强势上涨，继续持有"
+      detail: "强势上涨"
+      stave: "+1SD 至 +2SD"
+      channel: "高于通道上轨"
+      summary: "动能强劲，但已处高位，不宜盲目追高。"
+    SEL3:
+      action: "卖出"
+      detail: "双上轨均被向下穿越后卖出"
+      stave: "回落至 +2SD 之下"
+      channel: "回落至通道上轨之下"
+      summary: "超买之后，价格同时跌穿五线谱与通道。"
+    BUY4:
+      action: "买入区"
+      detail: "买入区，但尚无均线走弱确认"
+      stave: "-2SD 与 -1SD 之间"
+      channel: "上半区，仍在通道内"
+      summary: "五线谱位置偏低，且仍在通道内，短期均线未全面走弱。"
+    BUY5:
+      action: "积极买入"
+      detail: "积极买入区"
+      stave: "趋势至 +1SD"
+      channel: "上半区，仍在通道内"
+      summary: "向上结构良好，但尚未过度扩张。"
+    SEL6:
+      action: "部分卖出"
+      detail: "回到通道内后部分卖出"
+      stave: "+1SD 至 +2SD"
+      channel: "已回落通道内"
+      summary: "价格向下跌破通道上轨，但五线谱仍在高位。"
+    SEL7:
+      action: "卖出区"
+      detail: "卖出区"
+      stave: "+1SD 至 +2SD"
+      channel: "上半区，通道内"
+      summary: "超买之后，价格仍停留在上方卖出区。"
+    WAT8:
+      action: "等待"
+      detail: "等待确认"
+      stave: "-2SD 与 -1SD 之间"
+      channel: "上半区"
+      summary: "5、10、20、40 日均线均低于一个月前，应等待而不是使用 BUY4。"
+    WAT9:
+      action: "不要买入"
+      detail: "不要买入"
+      stave: "低于 -2SD"
+      channel: "低于通道下轨"
+      summary: "两项指标都弱，破位风险最大。"
+    CHP0:
+      action: "低价反弹买入"
+      detail: "反弹买入区"
+      stave: "低于 -2SD"
+      channel: "已回到下半区"
+      summary: "深度下跌之后的高风险反弹。"
+  home:
+    eyebrow: "LOHAS 市场分析"
+    subtitle: "覆盖中国主要交易所的趋势、通道与信号分析。"
+    buy:
+      eyebrow: "模型一致度最高"
+      title: "买入候选"
+      description: "当前买入族信号，按一致度、趋势方向与通道位置排序。该分数衡量技术面的一致程度，不代表盈利概率。"
+      jump_to_signals: "跳到买卖信号 ↓"
+      dataset_price: "数据集价格"
+      agreement_of: "/100 一致度 · "
+      invalidation: "信号转为等待或卖出时重新检查。"
+      why_score: "为什么是这个分数？"
+      why_score_short: "为什么是这个分数"
+      open_analysis: "打开分析 →"
+      no_candidates: "今日该市场没有一致度最高的候选股，不要硬做交易。"
+    risk_note: "一致度分数不等于预期收益。这里只给出模型候选清单，既不是保证，也不构成个性化投资建议。"
+    status:
+      model_date: "模型日期"
+      refresh_verified: "刷新已核验"
+      scheduled_refresh_verified: "定时刷新已核验"
+      date: " %{date}"
+      duration: "，用时 %{duration}"
+      recovered: "（已恢复过期的锁）"
+      running: "每日刷新正在运行"
+      failed: "上一次每日刷新失败"
+      scheduled_running: "定时刷新正在运行"
+      scheduled_failed: "上一次定时刷新失败"
+      schedule: "每日自动刷新时间 "
+    history_link: "查看信号历史 →"
+    signals:
+      eyebrow: "%{area} 市场"
+      title: "当前信号"
+      result_summary_one: "条结果匹配“%{stock}”"
+      result_summary_other: "条结果匹配“%{stock}”"
+      data_date: "数据日期"
+      open_guide: "打开信号指南 →"
+      filter_aria: "筛选信号"
+      filters:
+        all: "全部"
+        buy: "买入一致"
+        sell: "卖出警报"
+        watch: "观望"
+      table_note: "点按股票查看价格、趋势、通道与图表详情。"
+      historical: "历史"
+      ended_on: "终止于 %{date}"
+      show_all: "显示全部"
+      empty_title_search: "没有匹配的信号"
+      empty_title_group: "该分组内没有信号"
+      empty_body_search: "换一个股票代码，或清除搜索以查看全部当前结果。"
+      empty_body_group: "换一个筛选条件，或等待下一次每日刷新。"
+      table:
+        stock: "股票"
+        year_signal: "年窗口信号"
+        lohas_signal: "LOHAS 窗口信号"
+        long_trend: "长期趋势"
+        year_trend: "1 年趋势"
+        price: "价格"
+        channel_1y: "1 年通道"
+        stave_1y: "1 年五线谱"
+        channel_3_5y: "3.5 年通道"
+        stave_3_5y: "3.5 年五线谱"
+  show:
+    eyebrow: "个股分析"
+    freshness:
+      aria: "数据新鲜度"
+      historical_eyebrow: "历史数据"
+      historical_ends_on_html: "该股数据截止于 <strong>%{date}</strong>。"
+      market_continues_html: "%{area} 市场数据延续至 <strong>%{date}</strong>。"
+      current_eyebrow: "数据更新至"
+    trend:
+      eyebrow: "趋势强度"
+      title: "回归斜率健康度"
+      note: "LOHAS 策略只在确认的上升趋势中操作。趋势偏弱或为负会拉低预期胜率。"
+      lohas_horizon: "LOHAS（3.5 年）"
+      year_horizon: "年窗口（1 年）"
+      warning: "⚠️ 至少一个窗口处于下降趋势，均值回归的前提可能不成立。"
+      caution: "⚠️ 趋势强度偏弱或走平，建议等待更强的上升趋势确认。"
+    fundamentals:
+      eyebrow: "公司质量"
+      title: "基本面"
+      source: "策略前提是公司基本面稳健；基本面恶化会破坏均值回归的前提。数据来源：东方财富，最新报告 %{report_date}，抓取于 %{fetched_at}。"
+      name: "名称"
+      pe: "市盈率（TTM）"
+      pb: "市净率"
+      market_cap: "总市值"
+    decision:
+      eyebrow: "最近一次记录的判断"
+      reason: "%{explanation}这是模型给出的背景信息，不构成个性化投资建议。"
+      recorded_html: "记录于 <strong>%{date}</strong>，当时数据集价格 <strong>%{price}</strong>。"
+      understand: "理解这些信号 →"
+      year: "年窗口"
+      lohas: "LOHAS"
+    timeline:
+      eyebrow: "记录下来的证据"
+      title: "近期信号历史"
+      all_history: "全部市场历史 →"
+      changed: "信号变更"
+      recorded: "已记录"
+      price: "价格"
+      empty: "历史从下一次成功的每日刷新开始积累，不会用未来数据反推过去的信号。"
+    chart:
+      sampling_note_html: "<strong>为什么图上最后一个日期可能更早？</strong>近期图表每月取一个点，长周期图表每季取一个点。上方的数据更新日期才是权威的最终交易日。"
+      long_horizon: "长周期"
+      recent_horizon: "近期"
+      stave_lohas: "LOHAS 五线谱"
+      stave_year: "年窗口五线谱"
+      channel_lohas: "LOHAS 通道"
+      channel_year: "年窗口通道"
+      period_lohas: "3.5 年 · 季度"
+      period_year: "1 年 · 月度"
+  guide:
+    title: "信号指南"
+    subtitle: "每个信号都结合了价格在五线谱趋势带中的位置与其在 LOHAS 通道中的位置。"
+    explainer_aria: "如何阅读本指南"
+    stave: "五线谱"
+    stave_scale: "-2SD · -1SD · 趋势 · +1SD · +2SD"
+    channel: "通道"
+    channel_scale: "下轨 · 中轴 · 上轨"
+    original_link: "查看还原后的原始图解 →"
+    examples:
+      eyebrow: "来自还原出的原图"
+      title: "最初的 10 个例子"
+      description: "引擎现在通过向下穿越边界与四均线趋势检查，把这十种情形区分开。"
+      items:
+        "1":
+          title: "回到通道内后买入"
+          text: "价格到达五线谱相对悲观的一区，随后回到通道下半区之内。"
+        "2":
+          title: "强势上涨，继续持有"
+          text: "价格到达五线谱乐观区并突破通道。原指南指出此时还不要卖出或做空。"
+        "3":
+          title: "超买回落之后卖出"
+          text: "价格自乐观线之上跌落，回到通道之内。"
+        "4":
+          title: "通道未破时买入"
+          text: "价格到达悲观区域但未跌破通道，且短期均线并非全面下行。"
+        "5":
+          title: "买入或加仓"
+          text: "通道之内积极的价格位置支持加仓。"
+        "6":
+          title: "卖出部分持仓"
+          text: "价格到达相对乐观的区域，并从通道上方回到通道之内。"
+        "7":
+          title: "强势上涨之后卖出"
+          text: "超买之后价格跌破乐观线并回到通道之内。"
+        "8":
+          title: "等待确认"
+          text: "价格看似可以买入，但下行的短期均线提示它可能跌破通道。"
+        "9":
+          title: "不要买入"
+          text: "价格跌破通道下轨，确认弱势延续。"
+        "10":
+          title: "低价区反弹买入"
+          text: "价格仍处在极低价的五线谱区，但刚刚回到通道下半区之内。"
+    note: "这些是机械的价格位置信号，既不是保证，也不构成个性化投资建议。"
+  history:
+    eyebrow: "实测证据"
+    title: "信号历史"
+    subtitle: "每日快照保留了模型在当时真正知道的信息，避免往后的业绩报告误用未来的信息。"
+    method_note_html: "结果的测法与事件研究一致。每个信号都在信号日<em>之后</em>的收盘价入场——信号由当日收盘价推导，所以那个收盘价不可交易——并与同一天的模型池比较：那天策略本可以选到的全部股票，不论有无信号。超额是两者按日期加权后的差，所以只是随大盘上涨的一组信号并没有赚到钱。"
+    basis_adjusted: "收益按分红与拆股复权后的收盘价计算——那是股东实际见到的价格——所以派现或送股不再读成亏损。信号本身仍然由原始收盘价推导。"
+    basis_raw: "收益按原始收盘价计算：%{area} 尚未载入除权除息记录，因此派现或送股仍会读成亏损。"
+    ready: "可以开始测量"
+    collecting: "收集中"
+    none_yet: "暂无"
+    grid_aria: "各市场的快照覆盖情况"
+    stats:
+      snapshot_rows: "快照行数"
+      stocks_covered: "覆盖股票数"
+      latest_date: "最新日期"
+    enough: "已有足够的历史数据，可以开始短周期结果统计。"
+    more_needed_html: "还需要 <strong>%{count}</strong> 个交易日的快照，才能给出最初的胜率报告。"
+    trading_dates_recorded: "已记录 %{dates} 个交易日"
+    performance:
+      eyebrow: "已观测到的结果"
+      title: "%{horizon} 日信号表现"
+      warning: "历史观测是证据，不是预测。重叠的持有期一并计入，交易成本尚未扣除。"
+      model_pool: "模型池"
+    metrics:
+      average_return: "平均收益"
+      trading_dates: "交易日数"
+      observations: "观测数"
+      win_rate: "胜率"
+      average_drawdown: "平均回撤"
+      pool_return: "池收益"
+      excess_vs_pool: "相对池的超额"
+    simulation:
+      eyebrow: "完整账户模拟"
+      title: "策略模拟"
+      warning_html: "买入在“买入一致”出现<em>之后</em>的收盘价成交——信号由产生它的那根收盘价推导，所以同一根收盘价不可交易。最多同时持有 %{positions} 只，等权分配；出现“卖出警报”后超过 %{hold_days} 个交易日强制离场。买入按 %{buy_cost} 佣金、卖出按 %{sell_cost} 佣金加印花税计。信号数量超过持仓名额时，按股票代码而非预期收益挑选。"
+      account:
+        title: "账户"
+        starting_cash: "初始资金"
+        final_equity: "期末权益"
+        total_return: "总收益"
+        max_drawdown: "最大回撤"
+      trades:
+        title: "交易"
+        closed: "已平仓交易"
+        win_rate: "胜率"
+        flagged: "被标记的交易"
+        flagged_explanation: "有 %{count} 笔交易跨越了复权后涨跌超出任何板块限制的交易日。那一天说明复权因子有误，因此该笔收益照常报出，但不作为可信结论。"
+      benchmark:
+        title: "基准"
+        index: "指数"
+        buy_and_hold: "买入持有收益"
+        vs_index: "策略相对指数"
+        unavailable: "%{area} 暂无可用指数数据。"
+      equity_curve_eyebrow: "权益曲线"
+      equity_curve_title: "模拟账户市值与买入持有的对比"
+      series:
+        strategy: "策略"
+        index: "指数（买入持有）"
+      table:
+        date: "日期"
+        equity: "权益"
+        change: "当日变动"
+        buys: "买入"
+        sells: "卖出"
+    why_wait:
+      title: "为什么要等？"
+      body: "一只股票的成功并不能证明信号有效。系统会等待至少 %{count} 个交易日，再把样本量、平均收益、胜率与回撤一并报出——而不只是最好的那几个结果。"
+  error_pages:
+    not_found:
+      title: "未找到该股票"
+      body: "股票代码无效，或该股票不在所选市场中。"
+      back: "返回市场信号"
+      api: "未找到该股票"
+    bad_request:
+      title: "搜索无效"
+      body: "搜索股票时，请输入一到八位字母或数字。"
+      back: "返回市场信号"
+      api: "股票搜索无效"
+  mailer:
+    subject: "Stock Stave %{area} 信号变更"
+    subject_detail: "%{date}：买入 %{buys} 只，卖出 %{sells} 只"
+    digest_title: "Stock Stave %{area} 信号变更"
+    table:
+      stock: "股票"
+      change: "变更"
+      price: "价格"
+      signals: "信号（年/LOHAS）"
+    new: "新"
+    open_full_list: "打开完整列表"
+    in_stock_stave: "（在 Stock Stave 中）。"
+    open_any_stock: "在 %{base_url}/stocks/<code> 打开任意股票，例如 %{example}"

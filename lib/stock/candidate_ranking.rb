@@ -17,7 +17,11 @@ module Stock
       "bj" => %w[bj43____ bj83____ bj87____ bj88____ bj92____]
     }.freeze
 
-    Candidate = Data.define(:record, :score, :confidence, :reasons, :history_state) do
+    # The wording lives in the locale file, so a candidate carries the key
+    # rather than a sentence. The slug is kept beside it because the style
+    # sheet keys off the state, and a style must not depend on where a
+    # translation happens to live.
+    Candidate = Data.define(:record, :score, :confidence, :reasons, :history_state, :history_slug) do
       delegate :stock, :price, :date, :year_signal, :lohas_signal, :year, :loha, to: :record
     end
 
@@ -51,40 +55,41 @@ module Stock
 
     def evaluate(record)
       score = SIGNAL_POINTS.fetch(record.year_signal) + SIGNAL_POINTS.fetch(record.lohas_signal)
-      reasons = ["Both horizons are in a buy-family signal"]
+      reasons = [:"candidates.reasons.both_buy_family"]
 
       positive_trends = [record.year, record.loha].count { |trend| trend.to_f.positive? }
       score += positive_trends * 6
-      reasons << "Both measured trends are rising" if positive_trends == 2
+      reasons << :"candidates.reasons.both_trends_rising" if positive_trends == 2
 
       supported_positions = [record.boll1, record.stav1, record.boll3, record.stav3].count { |position| position.to_i >= 0 }
       score += supported_positions * 4
-      reasons << "Price position is supported on both horizons" if supported_positions == 4
+      reasons << :"candidates.reasons.position_supported" if supported_positions == 4
 
       if record.year_signal == record.lohas_signal
         score += 6
-        reasons << "The two horizons show the same signal"
+        reasons << :"candidates.reasons.same_signal"
       end
 
       if balanced_positive_trends?(record)
         score += 6
-        reasons << "Short and long trend strength are reasonably balanced"
+        reasons << :"candidates.reasons.balanced_trends"
       end
 
       score = [score, 100].min
-      Candidate.new(record:, score:, confidence: confidence_for(score), reasons: reasons.first(3), history_state: nil)
+      Candidate.new(record:, score:, confidence: confidence_for(score), reasons: reasons.first(3),
+                    history_state: nil, history_slug: nil)
     end
 
     def add_history_state(candidate, previous)
-      state = if previous.nil?
-        "First recorded"
+      slug = if previous.nil?
+        :first_recorded
       elsif previous.year_signal.in?(BUY_SIGNALS) && previous.lohas_signal.in?(BUY_SIGNALS)
-        "Still active"
+        :still_active
       else
-        "New buy signal"
+        :new_buy_signal
       end
 
-      Candidate.new(**candidate.to_h, history_state: state)
+      Candidate.new(**candidate.to_h, history_state: :"candidates.history.#{slug}", history_slug: slug)
     end
 
     def previous_snapshots(candidates, before:)
@@ -108,10 +113,10 @@ module Stock
     end
 
     def confidence_for(score)
-      return "Strong" if score >= 85
-      return "Moderate" if score >= 70
+      return :"candidates.confidence.strong" if score >= 85
+      return :"candidates.confidence.moderate" if score >= 70
 
-      "Cautious"
+      :"candidates.confidence.cautious"
     end
   end
 end

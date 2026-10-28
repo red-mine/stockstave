@@ -1,49 +1,49 @@
 <% signals = Stock::SignalCatalog::ENTRIES %>
 <% original_examples = [
-  { number: 1, code: "SAF1", title: "Buy after returning inside", text: "Price reaches the relatively pessimistic stave zone, then returns inside the lower channel." },
-  { number: 2, code: "SOX2", title: "Strong rise - continue holding", text: "Price reaches the optimistic stave zone and breaks above the channel. The original guide says not to sell or short it yet." },
-  { number: 3, code: "SEL3", title: "Sell after an overbought return", text: "Price falls from above the optimistic line and returns inside the channel." },
-  { number: 4, code: "BUY4", title: "Buy while the channel holds", text: "Price reaches the pessimistic area without breaking the channel, and broad short-term averages are not all falling." },
-  { number: 5, code: "BUY5", title: "Buy or add", text: "A constructive price position inside the channel supports adding to a position." },
-  { number: 6, code: "SEL6", title: "Sell part of the position", text: "Price reaches the relatively optimistic zone and returns from above the channel into it." },
-  { number: 7, code: "SEL7", title: "Sell after the strong rise", text: "After an overbought move, price falls below the optimistic line and returns inside the channel." },
-  { number: 8, code: "WAT8", title: "Wait for confirmation", text: "The price appears buyable, but falling short-term moving averages warn that it may break below the channel." },
-  { number: 9, code: "WAT9", title: "Do not buy", text: "Price breaks below the lower channel boundary, confirming continued weakness." },
-  { number: 10, code: "CHP0", title: "Cheap-zone recovery buy", text: "Price remains in the deeply cheap stave zone but has just returned inside the lower channel." }
+  { number: 1, code: "SAF1", title: :"guide.examples.items.1.title", text: :"guide.examples.items.1.text" },
+  { number: 2, code: "SOX2", title: :"guide.examples.items.2.title", text: :"guide.examples.items.2.text" },
+  { number: 3, code: "SEL3", title: :"guide.examples.items.3.title", text: :"guide.examples.items.3.text" },
+  { number: 4, code: "BUY4", title: :"guide.examples.items.4.title", text: :"guide.examples.items.4.text" },
+  { number: 5, code: "BUY5", title: :"guide.examples.items.5.title", text: :"guide.examples.items.5.text" },
+  { number: 6, code: "SEL6", title: :"guide.examples.items.6.title", text: :"guide.examples.items.6.text" },
+  { number: 7, code: "SEL7", title: :"guide.examples.items.7.title", text: :"guide.examples.items.7.text" },
+  { number: 8, code: "WAT8", title: :"guide.examples.items.8.title", text: :"guide.examples.items.8.text" },
+  { number: 9, code: "WAT9", title: :"guide.examples.items.9.title", text: :"guide.examples.items.9.text" },
+  { number: 10, code: "CHP0", title: :"guide.examples.items.10.title", text: :"guide.examples.items.10.text" }
 ] %>
 
 <main class="app-shell guide-page">
   <header class="guide-header">
-    <%= link_to "← Back to #{@area.upcase} signals", stocks_by_area_path(@area, signal: @return_signal_filter, anchor: "current-signals"), class: "back-link" %>
-    <p class="eyebrow">Stock Stave</p>
-    <h1>Signal guide</h1>
-    <p class="subtitle">Each signal combines the price's position in the stave trend bands with its position in the LOHAS channel.</p>
+    <%= link_to t("common.back_to_signals", area: @area.upcase), stocks_by_area_path(@area, signal: @return_signal_filter, anchor: "current-signals"), class: "back-link" %>
+    <p class="eyebrow"><%= t("app.name") %></p>
+    <h1><%= t("guide.title") %></h1>
+    <p class="subtitle"><%= t("guide.subtitle") %></p>
   </header>
 
-  <section class="guide-explainer" aria-label="How to read the guide">
-    <div><strong>Stave</strong><span>-2SD · -1SD · Trend · +1SD · +2SD</span></div>
-    <div><strong>Channel</strong><span>Lower boundary · Middle · Upper boundary</span></div>
+  <section class="guide-explainer" aria-label="<%= t("guide.explainer_aria") %>">
+    <div><strong><%= t("guide.stave") %></strong><span><%= t("guide.stave_scale") %></span></div>
+    <div><strong><%= t("guide.channel") %></strong><span><%= t("guide.channel_scale") %></span></div>
   </section>
 
-  <p class="original-guide-link"><%= link_to "View the restored original illustrated guide →", "/stave/stave.png?v=4" %></p>
+  <p class="original-guide-link"><%= link_to t("guide.original_link"), "/stave/stave.png?v=4" %></p>
 
   <div class="guide-grid">
     <% signals.each do |signal| %>
       <article id="signal-<%= signal[:code].downcase %>" class="guide-card guide-card-<%= signal[:tone] %>">
         <header>
           <%= signal_badge(signal[:code]) %>
-          <strong><%= signal[:action] %></strong>
+          <strong><%= t(signal[:action]) %></strong>
         </header>
-        <p><%= signal[:summary] %></p>
+        <p><%= t(signal[:summary]) %></p>
         <div class="position-row">
-          <span>Stave</span>
+          <span><%= t("guide.stave") %></span>
           <div class="position-track" aria-hidden="true"><i class="position-marker position-<%= signal[:stave_pos] %>"></i></div>
-          <small><%= signal[:stave] %></small>
+          <small><%= t(signal[:stave]) %></small>
         </div>
         <div class="position-row">
-          <span>Channel</span>
+          <span><%= t("guide.channel") %></span>
           <div class="position-track channel-track" aria-hidden="true"><i class="position-marker position-<%= signal[:channel_pos] %>"></i></div>
-          <small><%= signal[:channel] %></small>
+          <small><%= t(signal[:channel]) %></small>
         </div>
       </article>
     <% end %>
@@ -51,9 +51,9 @@
 
   <section class="original-examples" aria-labelledby="original-examples-title">
     <div class="examples-heading">
-      <p class="eyebrow">From the restored illustration</p>
-      <h2 id="original-examples-title">The original 10 examples</h2>
-      <p>The engine now distinguishes all ten cases using downward boundary crossings and a four-average trend check.</p>
+      <p class="eyebrow"><%= t("guide.examples.eyebrow") %></p>
+      <h2 id="original-examples-title"><%= t("guide.examples.title") %></h2>
+      <p><%= t("guide.examples.description") %></p>
     </div>
     <ol class="examples-list">
       <% original_examples.each do |example| %>
@@ -62,14 +62,14 @@
           <div>
             <header>
               <%= signal_badge(example[:code]) %>
-              <strong><%= example[:title] %></strong>
+              <strong><%= t(example[:title]) %></strong>
             </header>
-            <p><%= example[:text] %></p>
+            <p><%= t(example[:text]) %></p>
           </div>
         </li>
       <% end %>
     </ol>
   </section>
 
-  <p class="guide-note">These are mechanical price-position signals, not guarantees or personalized investment advice.</p>
+  <p class="guide-note"><%= t("guide.note") %></p>
 </main>

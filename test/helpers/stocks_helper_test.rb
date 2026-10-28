@@ -32,9 +32,11 @@ class StocksHelperTest < ActionView::TestCase
     Stock::SignalCatalog::ENTRIES.each do |signal|
       badge = signal_badge(signal.fetch(:code))
 
-      assert_includes badge, %(title="#{signal.fetch(:detail)}")
+      # The catalogue hands back the key of the wording; the badge shows the
+      # wording, in the language the page is being read in.
+      assert_includes badge, %(title="#{I18n.t(signal.fetch(:detail))}")
       assert_includes badge, "signal-#{signal.fetch(:tone)}"
-      assert_includes badge, signal.fetch(:badge_action)
+      assert_includes badge, I18n.t(signal.fetch(:badge_action))
     end
   end
 
@@ -76,8 +78,15 @@ class StocksHelperTest < ActionView::TestCase
 
   test "trend_status_label agrees with the shared labels" do
     Stock::Trend::LABELS.each_key do |status|
-      assert_equal Stock::Trend.label(status), trend_status_label(status), "status #{status}"
+      assert_equal I18n.t(Stock::Trend.label(status)), trend_status_label(status), "status #{status}"
     end
+  end
+
+  # The band names are read in whichever language the page is in, so the
+  # helper has to translate the key the shared rule hands back.
+  test "trend_status_label reads the band in the page's language" do
+    assert_equal "Strong uptrend", trend_status_label("strong_uptrend")
+    assert_equal "强势上升", I18n.t(Stock::Trend.label("strong_uptrend"), locale: :zh)
   end
 
   test "reports the actual first and last chart dates" do

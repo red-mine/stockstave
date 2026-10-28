@@ -1,12 +1,14 @@
 module Stock
   module Trend
+    # The band names live in the locale file: a label is a word for a reader,
+    # not a fact about a slope, so it does not belong to the calculation.
     LABELS = {
-      "strong_uptrend" => "Strong uptrend",
-      "uptrend" => "Uptrend",
-      "weak_uptrend" => "Weak uptrend",
-      "flat" => "Flat",
-      "downtrend" => "Downtrend",
-      "unknown" => "Unknown"
+      "strong_uptrend" => :"trend.strong_uptrend",
+      "uptrend" => :"trend.uptrend",
+      "weak_uptrend" => :"trend.weak_uptrend",
+      "flat" => :"trend.flat",
+      "downtrend" => :"trend.downtrend",
+      "unknown" => :"trend.unknown"
     }.freeze
 
     module_function
@@ -28,7 +30,7 @@ module Stock
     end
 
     def label(status)
-      LABELS.fetch(status.to_s, status.to_s.humanize)
+      LABELS.fetch(status.to_s, :"trend.unknown")
     end
   end
 end

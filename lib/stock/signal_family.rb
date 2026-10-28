@@ -13,15 +13,17 @@ module Stock
       "watch"
     end
 
+    # The names and the explanations live in the locale file, so the family
+    # can be read in either language without a second copy of the wording.
     def label(family)
-      { "buy" => "Buy agreement", "sell" => "Sell alert", "watch" => "Watch" }.fetch(family)
+      { "buy" => :"signal_family.buy", "sell" => :"signal_family.sell", "watch" => :"signal_family.watch" }.fetch(family)
     end
 
     def explanation(family)
       {
-        "buy" => "Both recorded horizons are in the buy family.",
-        "sell" => "At least one recorded horizon is in the sell family.",
-        "watch" => "There is no two-horizon buy agreement and no sell alert."
+        "buy" => :"signal_family.explanation.buy",
+        "sell" => :"signal_family.explanation.sell",
+        "watch" => :"signal_family.explanation.watch"
       }.fetch(family)
     end
   end

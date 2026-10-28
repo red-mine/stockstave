@@ -1,33 +1,395 @@
-# Files in the config/locales directory are used for internationalization
-# and are automatically loaded by Rails. If you want to use locales other
-# than English, add the necessary files in this directory.
+# Every user-facing string in the app lives here. The English file is the
+# source of truth: the Chinese file must carry exactly the same keys, or a
+# reader switching languages would hit a missing translation. A test
+# (test/lib/stock/locale_completeness_test.rb) enforces that.
 #
-# To use the locales, use `I18n.t`:
-#
-#     I18n.t "hello"
-#
-# In views, this is aliased to just `t`:
-#
-#     <%= t("hello") %>
-#
-# To use a different locale, set it with `I18n.locale`:
-#
-#     I18n.locale = :es
-#
-# This would use the information in config/locales/es.yml.
-#
-# The following keys must be escaped otherwise they will not be retrieved by
-# the default I18n backend:
-#
-# true, false, on, off, yes, no
-#
-# Instead, surround them with single quotes.
-#
-# en:
-#   "true": "foo"
-#
-# To learn more, please read the Rails Internationalization guide
-# available at https://guides.rubyonrails.org/i18n.html.
-
+# The domain code under lib/stock never speaks for itself: it returns the
+# keys below, and the view layer translates them. That keeps the signal
+# catalogue and the ranking rules free of any particular language.
 en:
-  hello: "Hello world"
+  app:
+    name: "Stock Stave"
+    tagline: "Trend, channel, and signal analysis across China’s major exchanges."
+  locale:
+    label: "Language"
+    switch_to_english: "Switch to English"
+    switch_to_chinese: "切换到中文"
+  common:
+    unavailable: "Unavailable"
+    unknown: "unknown"
+    dash: "—"
+    back_to_signals: "← Back to %{area} signals"
+    open_analysis_aria: "Open %{stock} analysis"
+    open_signal_guide: "Open signal guide for %{label}"
+    date_range_unavailable: "Date range unavailable"
+  nav:
+    market: "Stock market"
+  search:
+    label: "Find a stock"
+    section: "Stock search"
+    help: "Search by full code or a partial symbol"
+    placeholder: "e.g. %{area}000001"
+    submit: "Search"
+    clear: "Clear search"
+  data_recency:
+    recent: "Recent"
+    stale: "Needs update"
+    unknown: "Unavailable"
+  actions:
+    buy: "Buy"
+    hold: "Hold"
+    sell: "Sell"
+    wait: "Wait"
+    avoid: "Avoid"
+    signal: "Signal"
+    no_signal: "No signal"
+  signal_family:
+    buy: "Buy agreement"
+    sell: "Sell alert"
+    watch: "Watch"
+    explanation:
+      buy: "Both recorded horizons are in the buy family."
+      sell: "At least one recorded horizon is in the sell family."
+      watch: "There is no two-horizon buy agreement and no sell alert."
+  trend:
+    strong_uptrend: "Strong uptrend"
+    uptrend: "Uptrend"
+    weak_uptrend: "Weak uptrend"
+    flat: "Flat"
+    downtrend: "Downtrend"
+    unknown: "Unknown"
+  candidates:
+    confidence:
+      strong: "Strong"
+      moderate: "Moderate"
+      cautious: "Cautious"
+    history:
+      first_recorded: "First recorded"
+      still_active: "Still active"
+      new_buy_signal: "New buy signal"
+    reasons:
+      both_buy_family: "Both horizons are in a buy-family signal"
+      both_trends_rising: "Both measured trends are rising"
+      position_supported: "Price position is supported on both horizons"
+      same_signal: "The two horizons show the same signal"
+      balanced_trends: "Short and long trend strength are reasonably balanced"
+  fundamentals:
+    verdict:
+      pass: "Sound fundamentals"
+      fail: "Weak fundamentals"
+      unknown: "Fundamentals unverified"
+    check:
+      roe: "ROE (annualized)"
+      revenue_yoy: "Revenue YoY"
+      profit_yoy: "Profit YoY"
+    no_data: "%{name}: no data (needs ≥ %{threshold}%)"
+    not_fetched: "No fundamentals fetched yet. Run bin/rails fundamentals_refresh."
+    report_period: "Report period: %{date}"
+    fetched_on: "Fetched: %{date}"
+  signal_catalog:
+    SAF1:
+      action: "Buy zone"
+      detail: "Safe buy zone"
+      stave: "Between -2SD and -1SD"
+      channel: "Lower half, still inside"
+      summary: "Depressed relative to trend without breaking below the channel."
+    SOX2:
+      action: "Strong rise - hold"
+      detail: "Strong rise"
+      stave: "+1SD to +2SD"
+      channel: "Above upper boundary"
+      summary: "Strong momentum, but already elevated; avoid chasing blindly."
+    SEL3:
+      action: "Sell"
+      detail: "Sell after both upper boundaries are crossed downward"
+      stave: "Returned below +2SD"
+      channel: "Returned below upper boundary"
+      summary: "Price crossed downward into both the stave and channel after an overbought move."
+    BUY4:
+      action: "Buy zone"
+      detail: "Buy zone without falling moving-average confirmation"
+      stave: "Between -2SD and -1SD"
+      channel: "Upper half, still inside"
+      summary: "A depressed stave position remains inside the channel without broad moving-average weakness."
+    BUY5:
+      action: "Positive buy"
+      detail: "Positive buy zone"
+      stave: "Trend to +1SD"
+      channel: "Upper half, still inside"
+      summary: "Constructive upward movement that is not yet highly extended."
+    SEL6:
+      action: "Partial sell"
+      detail: "Partial sell after returning inside the channel"
+      stave: "+1SD to +2SD"
+      channel: "Crossed back inside"
+      summary: "Price crossed downward through the channel's upper boundary while remaining elevated in the stave."
+    SEL7:
+      action: "Sell zone"
+      detail: "Sell zone"
+      stave: "+1SD to +2SD"
+      channel: "Upper half, inside"
+      summary: "An extended price remains in the upper sell zone after an overbought move."
+    WAT8:
+      action: "Wait"
+      detail: "Wait for confirmation"
+      stave: "Between -2SD and -1SD"
+      channel: "Upper half"
+      summary: "The 5-, 10-, 20-, and 40-day averages are all lower than one month ago, so wait instead of using BUY4."
+    WAT9:
+      action: "Avoid buying"
+      detail: "Avoid buying"
+      stave: "Below -2SD"
+      channel: "Below lower boundary"
+      summary: "Weak on both measures and at the greatest breakdown risk."
+    CHP0:
+      action: "Cheap recovery"
+      detail: "Recovery buy zone"
+      stave: "Below -2SD"
+      channel: "Recovered into lower half"
+      summary: "A higher-risk rebound after an unusually deep decline."
+  home:
+    eyebrow: "LOHAS market analysis"
+    subtitle: "Trend, channel, and signal analysis across China’s major exchanges."
+    buy:
+      eyebrow: "Strongest model agreement"
+      title: "Buy candidates"
+      description: "Current buy-family signals ranked by agreement, trend direction, and channel position. The score measures technical agreement—not the probability of profit."
+      jump_to_signals: "Jump to buy/sell signals ↓"
+      dataset_price: "Dataset price"
+      agreement_of: "/100 agreement · "
+      invalidation: "Recheck if the signal changes to wait or sell."
+      why_score: "Why this score?"
+      why_score_short: "Why this score"
+      open_analysis: "Open analysis →"
+      no_candidates: "No strongest-agreement candidates in this market today. Do not force a trade."
+    risk_note: "Agreement score ≠ expected return. Model shortlist only—not a guarantee or personalized financial advice."
+    status:
+      model_date: "Model date"
+      refresh_verified: "Refresh verified"
+      scheduled_refresh_verified: "Scheduled refresh verified"
+      date: " %{date}"
+      duration: " in %{duration}"
+      recovered: " after recovering an expired lock"
+      running: "Daily refresh is running"
+      failed: "Last daily refresh failed"
+      scheduled_running: "Scheduled refresh is running"
+      scheduled_failed: "Last scheduled refresh failed"
+      schedule: "Automatic refresh daily at "
+    history_link: "View signal history →"
+    signals:
+      eyebrow: "%{area} market"
+      title: "Current signals"
+      result_summary_one: "result matching “%{stock}”"
+      result_summary_other: "results matching “%{stock}”"
+      data_date: "Data date"
+      open_guide: "Open signal guide →"
+      filter_aria: "Filter signals"
+      filters:
+        all: "All"
+        buy: "Buy agreement"
+        sell: "Sell alert"
+        watch: "Watch"
+      table_note: "Tap a stock for price, trend, channel, and chart details."
+      historical: "Historical"
+      ended_on: "Ended %{date}"
+      show_all: "Show all"
+      empty_title_search: "No matching signals"
+      empty_title_group: "No signals in this group"
+      empty_body_search: "Try another stock code or clear the search to see all current results."
+      empty_body_group: "Choose another filter or wait for the next daily refresh."
+      table:
+        stock: "Stock"
+        year_signal: "Year signal"
+        lohas_signal: "LOHAS signal"
+        long_trend: "Long trend"
+        year_trend: "1-year trend"
+        price: "Price"
+        channel_1y: "1Y channel"
+        stave_1y: "1Y stave"
+        channel_3_5y: "3.5Y channel"
+        stave_3_5y: "3.5Y stave"
+  show:
+    eyebrow: "Stock analysis"
+    freshness:
+      aria: "Data freshness"
+      historical_eyebrow: "Historical data"
+      historical_ends_on_html: "This stock's data ends on <strong>%{date}</strong>."
+      market_continues_html: "%{area} market data continues through <strong>%{date}</strong>."
+      current_eyebrow: "Data current through"
+    trend:
+      eyebrow: "Trend strength"
+      title: "Regression slope health"
+      note: "The LOHAS strategy is designed for confirmed uptrends. Weak or negative trends lower the expected win rate."
+      lohas_horizon: "LOHAS (3.5 yr)"
+      year_horizon: "Year (1 yr)"
+      warning: "⚠️ At least one horizon shows a downtrend. The mean-reversion assumption may not hold."
+      caution: "⚠️ Trend strength is weak or flat. Consider waiting for a stronger uptrend confirmation."
+    fundamentals:
+      eyebrow: "Company quality"
+      title: "Fundamentals"
+      source: "The strategy assumes a fundamentally sound company; deteriorating fundamentals break the mean-reversion premise. Source: Eastmoney, latest report %{report_date}, fetched %{fetched_at}."
+      name: "Name"
+      pe: "PE (TTM)"
+      pb: "PB"
+      market_cap: "Market cap"
+    decision:
+      eyebrow: "Latest recorded decision"
+      reason: "%{explanation} This is model context, not personalized financial advice."
+      recorded_html: "Recorded <strong>%{date}</strong> at dataset price <strong>%{price}</strong>."
+      understand: "Understand these signals →"
+      year: "Year"
+      lohas: "LOHAS"
+    timeline:
+      eyebrow: "Recorded evidence"
+      title: "Recent signal history"
+      all_history: "All market history →"
+      changed: "Signal changed"
+      recorded: "Recorded"
+      price: "Price"
+      empty: "History starts after the next successful daily refresh. No past signal is reconstructed from future data."
+    chart:
+      sampling_note_html: "<strong>Why can the last plotted date be earlier?</strong> Recent charts use one point per month and long-horizon charts use one point per quarter. The data-current date above is the authoritative final trading date."
+      long_horizon: "Long horizon"
+      recent_horizon: "Recent horizon"
+      stave_lohas: "LOHAS stave"
+      stave_year: "Year stave"
+      channel_lohas: "LOHAS channel"
+      channel_year: "Year channel"
+      period_lohas: "3.5 years · quarterly"
+      period_year: "1 year · monthly"
+  guide:
+    title: "Signal guide"
+    subtitle: "Each signal combines the price's position in the stave trend bands with its position in the LOHAS channel."
+    explainer_aria: "How to read the guide"
+    stave: "Stave"
+    stave_scale: "-2SD · -1SD · Trend · +1SD · +2SD"
+    channel: "Channel"
+    channel_scale: "Lower boundary · Middle · Upper boundary"
+    original_link: "View the restored original illustrated guide →"
+    examples:
+      eyebrow: "From the restored illustration"
+      title: "The original 10 examples"
+      description: "The engine now distinguishes all ten cases using downward boundary crossings and a four-average trend check."
+      items:
+        "1":
+          title: "Buy after returning inside"
+          text: "Price reaches the relatively pessimistic stave zone, then returns inside the lower channel."
+        "2":
+          title: "Strong rise - continue holding"
+          text: "Price reaches the optimistic stave zone and breaks above the channel. The original guide says not to sell or short it yet."
+        "3":
+          title: "Sell after an overbought return"
+          text: "Price falls from above the optimistic line and returns inside the channel."
+        "4":
+          title: "Buy while the channel holds"
+          text: "Price reaches the pessimistic area without breaking the channel, and broad short-term averages are not all falling."
+        "5":
+          title: "Buy or add"
+          text: "A constructive price position inside the channel supports adding to a position."
+        "6":
+          title: "Sell part of the position"
+          text: "Price reaches the relatively optimistic zone and returns from above the channel into it."
+        "7":
+          title: "Sell after the strong rise"
+          text: "After an overbought move, price falls below the optimistic line and returns inside the channel."
+        "8":
+          title: "Wait for confirmation"
+          text: "The price appears buyable, but falling short-term moving averages warn that it may break below the channel."
+        "9":
+          title: "Do not buy"
+          text: "Price breaks below the lower channel boundary, confirming continued weakness."
+        "10":
+          title: "Cheap-zone recovery buy"
+          text: "Price remains in the deeply cheap stave zone but has just returned inside the lower channel."
+    note: "These are mechanical price-position signals, not guarantees or personalized investment advice."
+  history:
+    eyebrow: "Measured evidence"
+    title: "Signal history"
+    subtitle: "Daily snapshots preserve what the model actually knew at the time. This prevents future performance reports from accidentally using information from the future."
+    method_note_html: "Outcomes are measured the way the event study measures them. Each signal is entered at the close <em>after</em> the signal date — the signal is derived from that day's close, so that close is not tradable — and is compared against the model pool of the same day: the stocks the strategy could have picked then, signal or not. Excess is the date-weighted difference between the two, so a cohort that merely rose with the market has earned nothing."
+    basis_adjusted: "Returns are measured on dividend- and split-adjusted closes — the prices a shareholder would actually have seen — so a dividend or a bonus share no longer reads as a loss. The signals themselves are still derived from the raw close."
+    basis_raw: "Returns are measured on raw closes: no corporate-action records are loaded for %{area}, so a dividend or a bonus share still reads as a loss."
+    ready: "Ready to measure"
+    collecting: "Collecting"
+    none_yet: "None yet"
+    grid_aria: "Snapshot coverage by market"
+    stats:
+      snapshot_rows: "Snapshot rows"
+      stocks_covered: "Stocks covered"
+      latest_date: "Latest date"
+    enough: "There is enough initial history to begin short-horizon outcome reporting."
+    more_needed_html: "<strong>%{count}</strong> more trading-date snapshots are needed before showing an initial win-rate report."
+    trading_dates_recorded: "%{dates} trading dates recorded"
+    performance:
+      eyebrow: "Observed outcomes"
+      title: "%{horizon}-day signal performance"
+      warning: "Historical observations are evidence, not a forecast. Overlapping holding periods are included, and transaction costs are not yet deducted."
+      model_pool: "Model pool"
+    metrics:
+      average_return: "Average return"
+      trading_dates: "Trading dates"
+      observations: "Observations"
+      win_rate: "Win rate"
+      average_drawdown: "Average drawdown"
+      pool_return: "Pool return"
+      excess_vs_pool: "Excess vs pool"
+    simulation:
+      eyebrow: "Full account simulation"
+      title: "Strategy simulation"
+      warning_html: "Buys are filled at the close <em>after</em> the \"Buy agreement\" appears — the signal is derived from the close that produced it, so that same close is not tradable. Equal-weight across at most %{positions} concurrent positions, forced exit after %{hold_days} trading days without a \"Sell alert\". Assumes %{buy_cost} commission on buys and %{sell_cost} commission + stamp duty on sells. When more stocks signal than there are slots, selection is by stock code, not by expected return."
+      account:
+        title: "Account"
+        starting_cash: "Starting cash"
+        final_equity: "Final equity"
+        total_return: "Total return"
+        max_drawdown: "Max drawdown"
+      trades:
+        title: "Trades"
+        closed: "Trades closed"
+        win_rate: "Win rate"
+        flagged: "Flagged trades"
+        flagged_explanation: "%{count} trade(s) cover a day whose adjusted move no board would allow. That day means an adjustment factor is wrong, so the return across it is reported but not trusted."
+      benchmark:
+        title: "Benchmark"
+        index: "Index"
+        buy_and_hold: "Buy & hold return"
+        vs_index: "Strategy vs. index"
+        unavailable: "No index data available for %{area}."
+      equity_curve_eyebrow: "Equity curve"
+      equity_curve_title: "Simulated account value vs. buy & hold"
+      series:
+        strategy: "Strategy"
+        index: "Index (buy & hold)"
+      table:
+        date: "Date"
+        equity: "Equity"
+        change: "Change"
+        buys: "Buys"
+        sells: "Sells"
+    why_wait:
+      title: "Why wait?"
+      body: "A single successful stock does not prove that a signal works. The system will wait for at least %{count} trading dates, then report sample size, average return, win rate, and drawdown together—not just the best outcomes."
+  error_pages:
+    not_found:
+      title: "Stock not found"
+      body: "The stock code is invalid or is not available in the selected market."
+      back: "Return to market signals"
+      api: "Stock not found"
+    bad_request:
+      title: "Invalid search"
+      body: "Use between one and eight letters or numbers when searching for a stock."
+      back: "Return to market signals"
+      api: "Invalid stock search"
+  mailer:
+    subject: "Stock Stave %{area} signal changes"
+    subject_detail: "%{date}: %{buys} buy, %{sells} sell"
+    digest_title: "Stock Stave signal changes for %{area}"
+    table:
+      stock: "Stock"
+      change: "Change"
+      price: "Price"
+      signals: "Signals (year/lohas)"
+    new: "new"
+    open_full_list: "Open the full list"
+    in_stock_stave: "in Stock Stave."
+    open_any_stock: "Open any stock at %{base_url}/stocks/<code>, e.g. %{example}"

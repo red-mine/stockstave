@@ -24,4 +24,10 @@ end
 class ActiveSupport::TestCase
   parallelize(workers: :number_of_processors) unless Gem.win_platform?
   include DayFileFixture
+
+  # The app reads in English by default, but a request that switched the
+  # language leaves I18n.locale set for the rest of the process. Without this
+  # a test that happens to run after it would read the page in the wrong
+  # language, and the failure would look like a translation bug.
+  setup { I18n.locale = I18n.default_locale }
 end

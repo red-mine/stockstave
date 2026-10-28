@@ -394,7 +394,7 @@ task :index_signals, [:area] => :environment do |_task, args|
         reading.code, reading.name, reading.date, reading.price,
         reading.lohas_signal.presence || "-", reading.year_signal.presence || "-",
         reading.family,
-        Stock::Trend.label(Stock::Trend.classify(reading.year)))
+        I18n.t(Stock::Trend.label(Stock::Trend.classify(reading.year))))
     end
   end
   puts

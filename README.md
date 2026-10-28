@@ -424,6 +424,27 @@ bundle exec rails server
 Open <http://localhost:3000/sz>, `/sh`, or `/bj`. Select a stock to view its
 one-year and 3.5-year stave and channel charts.
 
+### Read the app in English or Chinese
+
+The app reads in English by default and can be switched to Chinese from the
+link above the page. The choice is remembered for the pages that follow, so
+a reader only has to switch once.
+
+A language is a file, not a branch in the code:
+
+- `config/locales/en.yml` — the source of truth for every user-facing string
+- `config/locales/zh.yml` — the same keys, in Chinese
+
+The two files must carry exactly the same keys, and
+`test/lib/stock/locale_completeness_test.rb` fails when they do not. The
+terminology follows `docs/event_study.md`, which is the research side of this
+app and already writes about these signals in Chinese.
+
+The domain code under `lib/stock` never speaks for itself: the signal
+catalogue, the trend bands and the candidate ranking return the key of a
+phrase, and the view layer asks for it. Adding a language means adding a
+locale file, not editing the engine.
+
 To replace the local server and temporary Cloudflare Quick Tunnel with one
 verified command, run:
 

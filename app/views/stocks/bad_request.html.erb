@@ -1,8 +1,8 @@
 <main class="status-page">
   <div class="status-card">
     <p class="status-code">400</p>
-    <h1>Invalid search</h1>
-    <p>Use between one and eight letters or numbers when searching for a stock.</p>
-    <%= link_to "Return to market signals", stocks_by_area_path(@area), class: "button button-primary" %>
+    <h1><%= t("error_pages.bad_request.title") %></h1>
+    <p><%= t("error_pages.bad_request.body") %></p>
+    <%= link_to t("error_pages.bad_request.back"), stocks_by_area_path(@area), class: "button button-primary" %>
   </div>
 </main>

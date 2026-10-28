@@ -1,4 +1,4 @@
-<h2>Stock Stave signal changes for <%= @report.area.upcase %></h2>
+<h2><%= t("mailer.digest_title", area: @report.area.upcase) %></h2>
 <p><%= @report.previous_date %> &rarr; <%= @report.signal_date %></p>
 
 <% @families.each do |family, events| -%>
@@ -6,7 +6,7 @@
 <h3><%= family.upcase %> (<%= events.size %>)</h3>
 <table>
   <thead>
-    <tr><th>Stock</th><th>Change</th><th>Price</th><th>Signals (year/lohas)</th></tr>
+    <tr><th><%= t("mailer.table.stock") %></th><th><%= t("mailer.table.change") %></th><th><%= t("mailer.table.price") %></th><th><%= t("mailer.table.signals") %></th></tr>
   </thead>
   <tbody>
     <% events.each do |event| -%>
@@ -18,7 +18,7 @@
           <%= event.stock %>
         <% end -%>
       </td>
-      <td><%= event.previous_family || "new" %> &rarr; <%= event.family %></td>
+      <td><%= event.previous_family || t("mailer.new") %> &rarr; <%= event.family %></td>
       <td><%= number_with_precision(event.price, precision: 2) %></td>
       <td><%= [event.year_signal, event.lohas_signal].compact.join(" / ") %></td>
     </tr>
@@ -28,5 +28,5 @@
 <% end -%>
 
 <% if @base_url -%>
-<p><%= link_to "Open the full list", "#{@base_url}/#{@report.area}" %> in Stock Stave.</p>
+<p><%= link_to t("mailer.open_full_list"), "#{@base_url}/#{@report.area}" %> <%= t("mailer.in_stock_stave") %></p>
 <% end -%>

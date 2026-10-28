@@ -1,14 +1,14 @@
-Stock Stave signal changes for <%= @report.area.upcase %>
+<%= t("mailer.digest_title", area: @report.area.upcase) %>
 <%= @report.previous_date %> -> <%= @report.signal_date %>
 
 <% @families.each do |family, events| -%>
 <% next if events.empty? -%>
 <%= family.upcase %> (<%= events.size %>)
 <% events.each do |event| -%>
-  <%= event.stock %>  <%= event.previous_family || "new" %> -> <%= event.family %>  <%= number_with_precision(event.price, precision: 2) %>  <%= [event.year_signal, event.lohas_signal].compact.join("/") %>
+  <%= event.stock %>  <%= event.previous_family || t("mailer.new") %> -> <%= event.family %>  <%= number_with_precision(event.price, precision: 2) %>  <%= [event.year_signal, event.lohas_signal].compact.join("/") %>
 <% end -%>
 <% end -%>
 <% if @base_url -%>
 
-Open any stock at <%= @base_url %>/stocks/<code>, e.g. <%= stock_url_for(@report.events.first.stock) %>
+<%= t("mailer.open_any_stock", base_url: @base_url, example: stock_url_for(@report.events.first.stock)) %>
 <% end -%>

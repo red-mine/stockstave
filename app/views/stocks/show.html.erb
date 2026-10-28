@@ -1,26 +1,26 @@
 <main class="app-shell">
   <header class="detail-header">
     <div>
-      <%= link_to "← Back to #{@area.upcase} signals", stocks_by_area_path(@area, anchor: @return_anchor), class: "back-link" %>
-      <p class="eyebrow">Stock analysis</p>
+      <%= link_to t("common.back_to_signals", area: @area.upcase), stocks_by_area_path(@area, anchor: @return_anchor), class: "back-link" %>
+      <p class="eyebrow"><%= t("show.eyebrow") %></p>
       <h1><%= @stock.upcase %></h1>
     </div>
-    <nav class="market-tabs" aria-label="Stock market">
+    <nav class="market-tabs" aria-label="<%= t("nav.market") %>">
       <%= market_navigation(@area) %>
     </nav>
   </header>
 
-  <section class="data-freshness <%= "is-historical" if @historical_data %>" aria-label="Data freshness">
+  <section class="data-freshness <%= "is-historical" if @historical_data %>" aria-label="<%= t("show.freshness.aria") %>">
     <% if @historical_data %>
       <div>
-        <p class="eyebrow">Historical data</p>
-        <p>This stock's data ends on <strong><%= @stock_date %></strong>.</p>
+        <p class="eyebrow"><%= t("show.freshness.historical_eyebrow") %></p>
+        <p><%= t("show.freshness.historical_ends_on_html", date: @stock_date) %></p>
       </div>
-      <p class="freshness-context"><%= @area.upcase %> market data continues through <strong><%= @market_date %></strong>.</p>
+      <p class="freshness-context"><%= t("show.freshness.market_continues_html", area: @area.upcase, date: @market_date) %></p>
     <% else %>
       <div>
-        <p class="eyebrow">Data current through</p>
-        <p><strong><%= @stock_date || "Unavailable" %></strong></p>
+        <p class="eyebrow"><%= t("show.freshness.current_eyebrow") %></p>
+        <p><strong><%= @stock_date || t("common.unavailable") %></strong></p>
       </div>
     <% end %>
   </section>
@@ -28,26 +28,26 @@
   <% if @trend_health %>
     <section class="trend-health" aria-labelledby="trend-health-title">
       <div>
-        <p class="eyebrow">Trend strength</p>
-        <h2 id="trend-health-title">Regression slope health</h2>
-        <p class="trend-note">The LOHAS strategy is designed for confirmed uptrends. Weak or negative trends lower the expected win rate.</p>
+        <p class="eyebrow"><%= t("show.trend.eyebrow") %></p>
+        <h2 id="trend-health-title"><%= t("show.trend.title") %></h2>
+        <p class="trend-note"><%= t("show.trend.note") %></p>
       </div>
       <div class="trend-horizons">
         <div class="trend-horizon trend-<%= @trend_health[:loha_status] %>">
-          <small>LOHAS (3.5 yr)</small>
+          <small><%= t("show.trend.lohas_horizon") %></small>
           <strong><%= number_with_precision(@trend_health[:loha_slope], precision: 4) %></strong>
           <span class="trend-label"><%= trend_status_label(@trend_health[:loha_status]) %></span>
         </div>
         <div class="trend-horizon trend-<%= @trend_health[:year_status] %>">
-          <small>Year (1 yr)</small>
+          <small><%= t("show.trend.year_horizon") %></small>
           <strong><%= number_with_precision(@trend_health[:year_slope], precision: 4) %></strong>
           <span class="trend-label"><%= trend_status_label(@trend_health[:year_status]) %></span>
         </div>
       </div>
       <% if @trend_health[:loha_status] == "downtrend" || @trend_health[:year_status] == "downtrend" %>
-        <p class="trend-warning">⚠️ At least one horizon shows a downtrend. The mean-reversion assumption may not hold.</p>
+        <p class="trend-warning"><%= t("show.trend.warning") %></p>
       <% elsif @trend_health[:loha_status] == "weak_uptrend" || @trend_health[:year_status] == "weak_uptrend" || @trend_health[:loha_status] == "flat" || @trend_health[:year_status] == "flat" %>
-        <p class="trend-caution">⚠️ Trend strength is weak or flat. Consider waiting for a stronger uptrend confirmation.</p>
+        <p class="trend-caution"><%= t("show.trend.caution") %></p>
       <% end %>
     </section>
   <% end %>
@@ -55,21 +55,21 @@
   <% if @fundamental %>
     <section class="fundamentals" aria-labelledby="fundamentals-title">
       <div>
-        <p class="eyebrow">Company quality</p>
+        <p class="eyebrow"><%= t("show.fundamentals.eyebrow") %></p>
         <h2 id="fundamentals-title">
-          Fundamentals
+          <%= t("show.fundamentals.title") %>
           <span class="fundamentals-badge fundamentals-<%= @fundamental_quality.verdict %>"><%= fundamentals_verdict_label(@fundamental_quality.verdict) %></span>
         </h2>
-        <p class="trend-note">The strategy assumes a fundamentally sound company; deteriorating fundamentals break the mean-reversion premise. Source: Eastmoney, latest report <%= @fundamental.report_date || "unknown" %>, fetched <%= @fundamental.fetched_at&.to_date || "unknown" %>.</p>
+        <p class="trend-note"><%= t("show.fundamentals.source", report_date: @fundamental.report_date || t("common.unknown"), fetched_at: @fundamental.fetched_at&.to_date || t("common.unknown")) %></p>
       </div>
       <dl class="fundamentals-grid">
-        <div><dt>Name</dt><dd><%= @fundamental.name || "—" %></dd></div>
-        <div><dt>PE (TTM)</dt><dd><%= formatted_number(@fundamental.pe_ttm) %></dd></div>
-        <div><dt>PB</dt><dd><%= formatted_number(@fundamental.pb) %></dd></div>
-        <div><dt>Market cap</dt><dd><%= market_cap_label(@fundamental.market_cap) %></dd></div>
-        <div><dt>ROE (annualized)</dt><dd><%= @fundamental_quality.annualized_roe ? signed_percentage(@fundamental_quality.annualized_roe) : "—" %></dd></div>
-        <div><dt>Revenue YoY</dt><dd><%= signed_percentage(@fundamental.revenue_yoy) %></dd></div>
-        <div><dt>Profit YoY</dt><dd><%= signed_percentage(@fundamental.profit_yoy) %></dd></div>
+        <div><dt><%= t("show.fundamentals.name") %></dt><dd><%= @fundamental.name || t("common.dash") %></dd></div>
+        <div><dt><%= t("show.fundamentals.pe") %></dt><dd><%= formatted_number(@fundamental.pe_ttm) %></dd></div>
+        <div><dt><%= t("show.fundamentals.pb") %></dt><dd><%= formatted_number(@fundamental.pb) %></dd></div>
+        <div><dt><%= t("show.fundamentals.market_cap") %></dt><dd><%= market_cap_label(@fundamental.market_cap) %></dd></div>
+        <div><dt><%= t("fundamentals.check.roe") %></dt><dd><%= @fundamental_quality.annualized_roe ? signed_percentage(@fundamental_quality.annualized_roe) : t("common.dash") %></dd></div>
+        <div><dt><%= t("fundamentals.check.revenue_yoy") %></dt><dd><%= signed_percentage(@fundamental.revenue_yoy) %></dd></div>
+        <div><dt><%= t("fundamentals.check.profit_yoy") %></dt><dd><%= signed_percentage(@fundamental.profit_yoy) %></dd></div>
       </dl>
       <% if @fundamental_quality.checks.any? %>
         <ul class="fundamentals-checks">
@@ -85,15 +85,15 @@
     <% current_signal = @signal_timeline.first %>
     <section class="current-decision decision-<%= @current_decision %>" aria-labelledby="current-decision-title">
       <div>
-        <p class="eyebrow">Latest recorded decision</p>
-        <h2 id="current-decision-title"><%= Stock::SignalFamily.label(@current_decision) %></h2>
-        <p class="decision-reason"><%= Stock::SignalFamily.explanation(@current_decision) %> This is model context, not personalized financial advice.</p>
-        <p>Recorded <strong><%= current_signal.date %></strong> at dataset price <strong><%= formatted_number(current_signal.price) %></strong>.</p>
-        <%= link_to "Understand these signals →", signal_guide_path(area: @area), class: "guide-link decision-guide" %>
+        <p class="eyebrow"><%= t("show.decision.eyebrow") %></p>
+        <h2 id="current-decision-title"><%= t(Stock::SignalFamily.label(@current_decision)) %></h2>
+        <p class="decision-reason"><%= t("show.decision.reason", explanation: t(Stock::SignalFamily.explanation(@current_decision))) %></p>
+        <p><%= t("show.decision.recorded_html", date: current_signal.date, price: formatted_number(current_signal.price)) %></p>
+        <%= link_to t("show.decision.understand"), signal_guide_path(area: @area), class: "guide-link decision-guide" %>
       </div>
       <div class="decision-signals">
-        <div><small>Year</small><%= linked_signal_badge(current_signal.year_signal) %></div>
-        <div><small>LOHAS</small><%= linked_signal_badge(current_signal.lohas_signal) %></div>
+        <div><small><%= t("show.decision.year") %></small><%= linked_signal_badge(current_signal.year_signal) %></div>
+        <div><small><%= t("show.decision.lohas") %></small><%= linked_signal_badge(current_signal.lohas_signal) %></div>
       </div>
     </section>
   <% end %>
@@ -101,10 +101,10 @@
   <section class="signal-timeline" aria-labelledby="signal-timeline-title">
     <div class="timeline-heading">
       <div>
-        <p class="eyebrow">Recorded evidence</p>
-        <h2 id="signal-timeline-title">Recent signal history</h2>
+        <p class="eyebrow"><%= t("show.timeline.eyebrow") %></p>
+        <h2 id="signal-timeline-title"><%= t("show.timeline.title") %></h2>
       </div>
-      <%= link_to "All market history →", signal_history_path(area: @area), class: "guide-link" %>
+      <%= link_to t("show.timeline.all_history"), signal_history_path(area: @area), class: "guide-link" %>
     </div>
 
     <% if @signal_timeline.any? %>
@@ -113,52 +113,52 @@
           <article class="timeline-entry <%= "is-change" if entry.changed %>">
             <div class="timeline-date">
               <strong><%= entry.date %></strong>
-              <span><%= entry.changed ? "Signal changed" : "Recorded" %></span>
+              <span><%= entry.changed ? t("show.timeline.changed") : t("show.timeline.recorded") %></span>
             </div>
             <div class="timeline-signals">
-              <div><small>Year</small><%= linked_signal_badge(entry.year_signal) %></div>
-              <div><small>LOHAS</small><%= linked_signal_badge(entry.lohas_signal) %></div>
+              <div><small><%= t("show.decision.year") %></small><%= linked_signal_badge(entry.year_signal) %></div>
+              <div><small><%= t("show.decision.lohas") %></small><%= linked_signal_badge(entry.lohas_signal) %></div>
             </div>
-            <p><small>Price</small><strong><%= formatted_number(entry.price) %></strong></p>
+            <p><small><%= t("show.timeline.price") %></small><strong><%= formatted_number(entry.price) %></strong></p>
           </article>
         <% end %>
       </div>
     <% else %>
-      <p class="timeline-empty">History starts after the next successful daily refresh. No past signal is reconstructed from future data.</p>
+      <p class="timeline-empty"><%= t("show.timeline.empty") %></p>
     <% end %>
   </section>
 
-  <p class="chart-sampling-note"><strong>Why can the last plotted date be earlier?</strong> Recent charts use one point per month and long-horizon charts use one point per quarter. The data-current date above is the authoritative final trading date.</p>
+  <p class="chart-sampling-note"><%= t("show.chart.sampling_note_html") %></p>
 
   <div class="chart-grid">
     <section class="chart-card">
       <div class="chart-heading">
-        <div><p class="eyebrow">Long horizon</p><h2>LOHAS stave</h2></div>
-        <span class="chart-period"><strong>3.5 years · quarterly</strong><small><%= chart_date_range(@stave_lohas) %></small></span>
+        <div><p class="eyebrow"><%= t("show.chart.long_horizon") %></p><h2><%= t("show.chart.stave_lohas") %></h2></div>
+        <span class="chart-period"><strong><%= t("show.chart.period_lohas") %></strong><small><%= chart_date_range(@stave_lohas) %></small></span>
       </div>
       <%= line_chart @stave_lohas.map { |series| { name: series[:name], data: series[:data] } }, height: "340px", points: false %>
     </section>
 
     <section class="chart-card">
       <div class="chart-heading">
-        <div><p class="eyebrow">Recent horizon</p><h2>Year stave</h2></div>
-        <span class="chart-period"><strong>1 year · monthly</strong><small><%= chart_date_range(@stave_years) %></small></span>
+        <div><p class="eyebrow"><%= t("show.chart.recent_horizon") %></p><h2><%= t("show.chart.stave_year") %></h2></div>
+        <span class="chart-period"><strong><%= t("show.chart.period_year") %></strong><small><%= chart_date_range(@stave_years) %></small></span>
       </div>
       <%= line_chart @stave_years.map { |series| { name: series[:name], data: series[:data] } }, height: "340px", points: false %>
     </section>
 
     <section class="chart-card">
       <div class="chart-heading">
-        <div><p class="eyebrow">Long horizon</p><h2>LOHAS channel</h2></div>
-        <span class="chart-period"><strong>3.5 years · quarterly</strong><small><%= chart_date_range(@bolls_lohas) %></small></span>
+        <div><p class="eyebrow"><%= t("show.chart.long_horizon") %></p><h2><%= t("show.chart.channel_lohas") %></h2></div>
+        <span class="chart-period"><strong><%= t("show.chart.period_lohas") %></strong><small><%= chart_date_range(@bolls_lohas) %></small></span>
       </div>
       <%= line_chart @bolls_lohas.map { |series| { name: series[:name], data: series[:data] } }, height: "340px", points: false %>
     </section>
 
     <section class="chart-card">
       <div class="chart-heading">
-        <div><p class="eyebrow">Recent horizon</p><h2>Year channel</h2></div>
-        <span class="chart-period"><strong>1 year · monthly</strong><small><%= chart_date_range(@bolls_years) %></small></span>
+        <div><p class="eyebrow"><%= t("show.chart.recent_horizon") %></p><h2><%= t("show.chart.channel_year") %></h2></div>
+        <span class="chart-period"><strong><%= t("show.chart.period_year") %></strong><small><%= chart_date_range(@bolls_years) %></small></span>
       </div>
       <%= line_chart @bolls_years.map { |series| { name: series[:name], data: series[:data] } }, height: "340px", points: false %>
     </section>

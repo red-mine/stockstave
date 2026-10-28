@@ -51,6 +51,33 @@ a { color: var(--teal-dark); }
   padding: 48px 0 72px;
 }
 
+/* The language switch sits above the page rather than inside a header: the
+   market pages, the stock page, the guide and the history each build their
+   own header, and the reader has to be able to switch on all of them. */
+.locale-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 0 0;
+}
+
+.locale-switch {
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: border-color 160ms ease, color 160ms ease;
+}
+
+.locale-switch:hover {
+  border-color: var(--teal);
+  color: var(--teal-dark);
+}
+
 .app-header,
 .detail-header {
   display: flex;

@@ -14,10 +14,13 @@ class StockCandidateRankingTest < ActiveSupport::TestCase
 
     assert_equal %w[sh603087 sh600001], candidates.map(&:stock)
     assert_equal 88, candidates.first.score
-    assert_equal "Strong", candidates.first.confidence
+    assert_equal :"candidates.confidence.strong", candidates.first.confidence
     assert_equal strong, candidates.first.record
-    assert_includes candidates.first.reasons, "Price position is supported on both horizons"
-    assert_equal "First recorded", candidates.first.history_state
+    assert_includes candidates.first.reasons, :"candidates.reasons.position_supported"
+    assert_equal :"candidates.history.first_recorded", candidates.first.history_state
+    # The slug beside the key is what the style sheet keys off, so a
+    # translation must never be able to change it.
+    assert_equal :first_recorded, candidates.first.history_slug
   end
 
   test "ranks signals in the order the event study supports" do
@@ -38,8 +41,10 @@ class StockCandidateRankingTest < ActiveSupport::TestCase
 
     candidates = Stock::CandidateRanking.new(Stock::SZSTK).call
 
-    assert_equal "New buy signal", candidates.find { |candidate| candidate.stock == "sz000001" }.history_state
-    assert_equal "Still active", candidates.find { |candidate| candidate.stock == "sz000002" }.history_state
+    assert_equal :"candidates.history.new_buy_signal",
+                 candidates.find { |candidate| candidate.stock == "sz000001" }.history_state
+    assert_equal :"candidates.history.still_active",
+                 candidates.find { |candidate| candidate.stock == "sz000002" }.history_state
   end
 
   test "uses each candidate's latest prior observation" do
@@ -49,7 +54,7 @@ class StockCandidateRankingTest < ActiveSupport::TestCase
 
     candidate = Stock::CandidateRanking.new(Stock::SZSTK).call.first
 
-    assert_equal "Still active", candidate.history_state
+    assert_equal :"candidates.history.still_active", candidate.history_state
   end
 
   test "excludes candidates with negative or flat trend slopes" do
