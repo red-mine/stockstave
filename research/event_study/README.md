@@ -29,6 +29,13 @@ python analyze.py $OUT $VIP
 
 # 5. Trend-filter decomposition (report section 10)
 python trend_filter.py $OUT $VIP
+
+# 6. Out-of-sample checks (report section 12): replay from 2012, then
+#    reproduce 2021-2026, test the findings on the 2012-2020 holdout and
+#    walk forward one year at a time
+python replay.py $VIP $OUT/2012 --start 20120101
+python fetch_xdxr.py $VIP $OUT/2012 --beg 20111201
+python out_of_sample.py $OUT/2012 $VIP
 ```
 
 | File | Role |
@@ -41,6 +48,7 @@ python trend_filter.py $OUT $VIP
 | `fetch_adjusted.py` | Same adjustment from Sina hfq factors; used to cross-check `fetch_xdxr.py` |
 | `analyze.py` | Date-weighted excess returns, Newey-West errors, Holm correction |
 | `trend_filter.py` | Separates the trend and the price-level parts of the engine's slope filter |
+| `out_of_sample.py` | Reproduction check, 2012-2020 holdout of the report's findings, yearly walk-forward rule selection net of costs |
 
 The TDX files are append-only, so pinning `--end` (default 2026-10-13) keeps
 the replay stable while the nightly refresh keeps adding days.
