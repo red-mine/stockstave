@@ -217,7 +217,12 @@ task data_status: :environment do
     state = market[:healthy] ? "OK" : "INCOMPLETE"
     puts "#{area.upcase}: #{state} source=#{market[:source_date] || 'missing'}"
     market[:tables].each do |table, status|
-      puts "  #{table}: rows=#{status[:rows]} stocks=#{status[:stocks]} latest=#{status[:date] || 'missing'}"
+      coverage = if status.key?(:missing_stocks)
+        " missing_stocks=#{status[:missing_stocks]} extra_stocks=#{status[:extra_stocks]}"
+      else
+        ""
+      end
+      puts "  #{table}: rows=#{status[:rows]} stocks=#{status[:stocks]} latest=#{status[:date] || 'missing'}#{coverage}"
     end
   end
 

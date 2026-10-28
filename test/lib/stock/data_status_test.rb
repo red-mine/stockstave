@@ -24,6 +24,24 @@ class DataStatusTest < ActiveSupport::TestCase
     refute checker.healthy_market?(market)
   end
 
+  test "rejects substituted chart stocks even when distinct counts match" do
+    checker = Stock::DataStatus.allocate
+    market = market_status(source_date: Date.new(2026, 7, 31), chart_stocks: 24)
+    market[:tables]["stocks_stave_lohas"].merge!(missing_stocks: 1, extra_stocks: 1)
+
+    refute checker.healthy_market?(market)
+  end
+
+  test "compares chart and combined stock sets in SQL" do
+    StocksCoefsStav.create!(area: Stock::SZSTK, stock: "sz000001")
+    StocksStaveLoha.create!(area: Stock::SZSTK, stock: "sz000002")
+    checker = Stock::DataStatus.new
+
+    status = checker.send(:stock_set_status, "stocks_stave_lohas", Stock::SZSTK)
+
+    assert_equal({ missing_stocks: 1, extra_stocks: 1 }, status)
+  end
+
   test "refresh areas contains only incomplete markets" do
     checker = Stock::DataStatus.allocate
     report = {
@@ -60,7 +78,9 @@ class DataStatusTest < ActiveSupport::TestCase
         {
           rows: 100,
           stocks: coefficient ? 24 : chart_stocks,
-          date: coefficient ? source_date : source_date.beginning_of_month
+          date: coefficient ? source_date : source_date.beginning_of_month,
+          missing_stocks: 0,
+          extra_stocks: 0
         }
       ]
     end

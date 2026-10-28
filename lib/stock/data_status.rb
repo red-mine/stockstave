@@ -26,6 +26,11 @@ module Stock
         @progress&.call(area, :started)
         source_date = latest_source_date(area)
         tables = TABLES.to_h { |table| [table, table_status(table, area)] }
+        if source_date
+          SERIES_TABLES.each do |table|
+            tables[table].merge!(stock_set_status(table, area))
+          end
+        end
         status = { source_date: source_date, tables: tables }
         status[:healthy] = healthy_market?(status)
         @progress&.call(area, :finished)
@@ -54,6 +59,8 @@ module Stock
         expected_series_date = table.include?("loha") ? source_date.beginning_of_quarter : source_date.beginning_of_month
         status[:rows].positive? &&
           status[:stocks] == combined_stocks &&
+          status[:missing_stocks].to_i.zero? &&
+          status[:extra_stocks].to_i.zero? &&
           status[:date] == expected_series_date
       end
     end
@@ -75,6 +82,30 @@ module Stock
           nil
         end
       end.max
+    end
+
+    # Equal DISTINCT counts do not prove equal coverage: one missing stock and
+    # one unexpected stock cancel each other out. Compare the actual sets in
+    # SQL so a partial chart refresh cannot look healthy merely by row count.
+    def stock_set_status(table, area)
+      quoted_area = @connection.quote(area)
+      row = @connection.select_one(<<~SQL.squish)
+        SELECT
+          (SELECT COUNT(*) FROM (
+            SELECT stock FROM stocks_coefs_stavs WHERE area = #{quoted_area}
+            EXCEPT
+            SELECT stock FROM #{table} WHERE area = #{quoted_area}
+          )) AS missing_stocks,
+          (SELECT COUNT(*) FROM (
+            SELECT stock FROM #{table} WHERE area = #{quoted_area}
+            EXCEPT
+            SELECT stock FROM stocks_coefs_stavs WHERE area = #{quoted_area}
+          )) AS extra_stocks
+      SQL
+      {
+        missing_stocks: row.fetch("missing_stocks").to_i,
+        extra_stocks: row.fetch("extra_stocks").to_i
+      }
     end
 
     def table_status(table, area)
