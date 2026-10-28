@@ -470,119 +470,10 @@ task :backtest, [:area] => :environment do |_task, args|
   puts "      A holding period covering a day whose adjusted move no board would allow is dropped."
 end
 
-def format_percent(value)
-  value.nil? ? "n/a" : "#{value}%"
-end
-
-def format_delta(before, after)
-  return "n/a" if before.nil? || after.nil?
-
-  difference = after - before
-  "#{difference >= 0 ? '+' : ''}#{difference.round(2)}pp"
-end
-
-# The ex-rights events inside the measured window, with the raw move they
-# caused and the move the adjustment leaves behind.
-def ex_rights_rows(area, window)
-  snapshots = StockSignalSnapshot.where(area: area).order(:signal_date).to_a
-  dates = snapshots.map(&:signal_date).uniq
-  closes = snapshots.index_by { |snapshot| [snapshot.stock, snapshot.signal_date] }
-  factors = Stock::PriceAdjustment.factors_for(area, snapshots.map(&:stock).uniq)
-
-  StockCorporateAction.where(area: area).where(ex_date: window.first..window.last)
-                      .order(:ex_date, :stock).filter_map do |action|
-    before_date = dates.select { |date| date < action.ex_date }.last
-    after_date = dates.find { |date| date >= action.ex_date }
-    next unless before_date && after_date
-
-    before = closes[[action.stock, before_date]]&.price
-    after = closes[[action.stock, after_date]]&.price
-    next unless before.to_f.positive? && after.to_f.positive?
-
-    raw_move = (after / before - 1) * 100
-    adjusted_before = before * factors.factor_for(action.stock, before_date)
-    adjusted_after = after * factors.factor_for(action.stock, after_date)
-    adjusted_move = (adjusted_after / adjusted_before - 1) * 100
-
-    [action.stock, action.ex_date.to_s, before, after, "#{raw_move.round(2)}%",
-     action.factor, "#{adjusted_move.round(2)}%"]
-  end
-end
-
 desc "Compare the measured returns on raw closes with the ones on adjusted closes"
-task :price_adjustment_impact, [:output] => :environment do |_task, args|
-  horizons = [5, 20]
-  lines = []
-
-  lines << "# Price adjustment impact"
-  lines << ""
-  lines << "Generated #{Time.current.utc.strftime('%Y-%m-%d %H:%M UTC')} from the saved signal history."
-  lines << ""
-  lines << "Both columns come from the same code -- `Stock::SignalPerformance` -- and differ only"
-  lines << "in the price basis: the raw TongdaXin closes the signals are derived from, and the"
-  lines << "dividend- and split-adjusted closes a shareholder would have seen. Everything else is"
-  lines << "identical: entry at the close after the signal date, the same-day model pool as the"
-  lines << "baseline, the date weighting, and the holding periods dropped for a flagged price."
-  lines << ""
-
-  Stock::AREAS.each do |area|
-    window = StockSignalSnapshot.where(area: area).pluck(:signal_date).minmax
-    next unless window.first
-
-    lines << "## #{area.upcase} (#{window.first} .. #{window.last})"
-    lines << ""
-
-    horizons.each do |horizon|
-      adjusted = Stock::SignalPerformance.new(area, horizon: horizon, adjusted: true).call
-      raw = Stock::SignalPerformance.new(area, horizon: horizon, adjusted: false).call
-
-      lines << "### #{horizon}-day holding period"
-      lines << ""
-      lines << "| cohort | n | raw avg | adjusted avg | Δ avg | raw pool | adjusted pool | raw excess | adjusted excess | Δ excess |"
-      lines << "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"
-      adjusted.cohorts.each do |cohort|
-        match = raw.cohorts.find do |other|
-          other.year_signal == cohort.year_signal && other.lohas_signal == cohort.lohas_signal &&
-            other.trend_group == cohort.trend_group
-        end
-        lines << format("| %s + %s | %d | %s | %s | %s | %s | %s | %s | %s | %s |",
-                        cohort.year_signal, cohort.lohas_signal, cohort.sample_size,
-                        format_percent(match&.average_return), format_percent(cohort.average_return),
-                        format_delta(match&.average_return, cohort.average_return),
-                        format_percent(match&.baseline_return), format_percent(cohort.baseline_return),
-                        format_percent(match&.excess_return), format_percent(cohort.excess_return),
-                        format_delta(match&.excess_return, cohort.excess_return))
-      end
-      lines << ""
-      lines << "Model pool: raw #{format_percent(raw.baseline.average_return)} -> adjusted " \
-               "#{format_percent(adjusted.baseline.average_return)} " \
-               "(#{adjusted.baseline.dates} days, #{adjusted.baseline.sample_size} observations)."
-      lines << ""
-    end
-
-    events = ex_rights_rows(area, window)
-    next if events.empty?
-
-    largest = events.max_by { |row| (row[4].to_f.abs - row[6].to_f.abs).abs }
-    lines << "### Ex-rights events inside the window (#{events.size})"
-    lines << ""
-    lines << "The largest single effect is #{largest[0]} on #{largest[1]}: the quote moved " \
-             "#{largest[4]} and the shareholder's return was #{largest[6]}."
-    lines << ""
-    lines << "| stock | ex-date | close before | close on/after | raw move | factor | adjusted move |"
-    lines << "|---|---|---:|---:|---:|---:|---:|"
-    events.each { |row| lines << format("| %s | %s | %.2f | %.2f | %s | %.4f | %s |", *row) }
-    lines << ""
-  end
-
-  lines << "## Method"
-  lines << ""
-  lines << "- The factors are the ones in `stock_corporate_actions`: the ex-rights records fetched from"
-  lines << "  the TongdaXin quote servers and turned into the same back-adjustment the event study"
-  lines << "  computes (`research/event_study/fetch_xdxr.py`)."
-  lines << "- The flagged days in `stock_price_anomalies` are dropped from both sides."
-  lines << "- Signals are derived from the raw close in both cases; only the returns differ."
-  lines << "- Regenerate with `bundle exec rails \"price_adjustment_impact[docs/price_adjustment_impact.md]\"`."
+task :price_adjustment_impact, [:output, :lang] => :environment do |_task, args|
+  report = Stock::PriceAdjustmentImpactReport.new(lang: args.lang || "en", output: args.output)
+  lines = report.call
 
   if args.output.present?
     # Binary mode on purpose: the report is committed, and the repository
@@ -594,6 +485,25 @@ task :price_adjustment_impact, [:output] => :environment do |_task, args|
   else
     puts lines
   end
+end
+
+desc "Write the price adjustment impact report in every language it is kept in"
+task :price_adjustment_impact_reports => :environment do
+  # One timestamp for every language, and one computation behind all of them:
+  # the files are two readings of the same measurement, so they must not be
+  # able to drift apart.
+  now = Time.current
+  written = []
+
+  Stock::PriceAdjustmentImpactReport::LANGUAGES.each do |lang|
+    path = "docs/price_adjustment_impact#{lang == "en" ? "" : ".#{lang}"}.md"
+    report = Stock::PriceAdjustmentImpactReport.new(lang: lang, output: path, now: now)
+    lines = report.call
+    File.binwrite(path, "#{lines.join("\n")}\n")
+    written << path
+  end
+
+  puts "Wrote #{written.join(", ")}"
 end
 
 desc "Simulate following the buy/sell recommendation (equal vs. grid position sizing)"

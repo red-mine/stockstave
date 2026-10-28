@@ -116,11 +116,23 @@ To see what the adjustment changed, the same report can be measured on both
 price bases and set side by side:
 
 ```powershell
-bundle exec rails "price_adjustment_impact[docs/price_adjustment_impact.md]"
+bundle exec rails price_adjustment_impact_reports
 ```
 
 Both sides come from the same code and differ only in the price basis. The
-committed report is the one under `docs/price_adjustment_impact.md`.
+report is kept in two languages, because the research notes it answers to are
+Chinese while the code and the rest of the docs are English:
+
+- `docs/price_adjustment_impact.md` — English
+- `docs/price_adjustment_impact.zh.md` — 中文
+
+Both files come out of one computation, so they cannot disagree about a
+number. To write a single file instead:
+
+```powershell
+bundle exec rails "price_adjustment_impact[docs/price_adjustment_impact.md]"
+bundle exec rails "price_adjustment_impact[docs/price_adjustment_impact.zh.md,zh]"
+```
 
 ## Generate analysis data
 
