@@ -84,7 +84,7 @@
               </div>
               <div class="candidate-score-row">
                 <p class="candidate-price"><small><%= t("home.buy.dataset_price") %></small><%= formatted_number(candidate.price) %></p>
-                <p class="candidate-score"><strong><%= candidate.score %></strong><small><%= t("home.buy.agreement_of") %><%= t(candidate.confidence) %></small></p>
+                <p class="candidate-score"><strong><%= candidate.score %></strong><small><%= t("home.buy.agreement_of") %><%= t(candidate.agreement) %></small></p>
               </div>
               <p class="candidate-reason"><%= t(candidate.reasons.first) %></p>
               <p class="candidate-invalidation"><%= t("home.buy.invalidation") %></p>

@@ -21,7 +21,7 @@ module Stock
     # rather than a sentence. The slug is kept beside it because the style
     # sheet keys off the state, and a style must not depend on where a
     # translation happens to live.
-    Candidate = Data.define(:record, :score, :confidence, :reasons, :history_state, :history_slug) do
+    Candidate = Data.define(:record, :score, :agreement, :reasons, :history_state, :history_slug) do
       delegate :stock, :price, :date, :year_signal, :lohas_signal, :year, :loha, to: :record
     end
 
@@ -76,7 +76,7 @@ module Stock
       end
 
       score = [score, 100].min
-      Candidate.new(record:, score:, confidence: confidence_for(score), reasons: reasons.first(3),
+      Candidate.new(record:, score:, agreement: agreement_for(score), reasons: reasons.first(3),
                     history_state: nil, history_slug: nil)
     end
 
@@ -112,11 +112,11 @@ module Stock
       ratio.between?(0.25, 4.0)
     end
 
-    def confidence_for(score)
-      return :"candidates.confidence.strong" if score >= 85
-      return :"candidates.confidence.moderate" if score >= 70
+    def agreement_for(score)
+      return :"candidates.agreement.high" if score >= 85
+      return :"candidates.agreement.medium" if score >= 70
 
-      :"candidates.confidence.cautious"
+      :"candidates.agreement.low"
     end
   end
 end

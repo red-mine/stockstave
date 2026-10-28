@@ -78,7 +78,7 @@ class StockLocaleCompletenessTest < ActiveSupport::TestCase
     keys = %w[
       fundamentals.verdict.pass fundamentals.verdict.fail fundamentals.verdict.unknown
       fundamentals.check.roe fundamentals.check.revenue_yoy fundamentals.check.profit_yoy
-      candidates.confidence.strong candidates.confidence.moderate candidates.confidence.cautious
+      candidates.agreement.high candidates.agreement.medium candidates.agreement.low
       candidates.history.first_recorded candidates.history.still_active candidates.history.new_buy_signal
       candidates.reasons.both_buy_family candidates.reasons.both_trends_rising
       candidates.reasons.position_supported candidates.reasons.same_signal

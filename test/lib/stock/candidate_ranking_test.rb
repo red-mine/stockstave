@@ -14,7 +14,7 @@ class StockCandidateRankingTest < ActiveSupport::TestCase
 
     assert_equal %w[sh603087 sh600001], candidates.map(&:stock)
     assert_equal 88, candidates.first.score
-    assert_equal :"candidates.confidence.strong", candidates.first.confidence
+    assert_equal :"candidates.agreement.high", candidates.first.agreement
     assert_equal strong, candidates.first.record
     assert_includes candidates.first.reasons, :"candidates.reasons.position_supported"
     assert_equal :"candidates.history.first_recorded", candidates.first.history_state

@@ -57,10 +57,10 @@ zh:
     downtrend: "下降"
     unknown: "未知"
   candidates:
-    confidence:
-      strong: "强"
-      moderate: "中等"
-      cautious: "谨慎"
+    agreement:
+      high: "高"
+      medium: "中"
+      low: "低"
     history:
       first_recorded: "首次记录"
       still_active: "仍然有效"

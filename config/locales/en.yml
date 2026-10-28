@@ -59,10 +59,10 @@ en:
     downtrend: "Downtrend"
     unknown: "Unknown"
   candidates:
-    confidence:
-      strong: "Strong"
-      moderate: "Moderate"
-      cautious: "Cautious"
+    agreement:
+      high: "High"
+      medium: "Medium"
+      low: "Low"
     history:
       first_recorded: "First recorded"
       still_active: "Still active"
