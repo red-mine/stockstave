@@ -1,20 +1,113 @@
 # Stock Stave
 
-Stock Stave is a Ruby on Rails application for analysing Chinese A-share prices
-with the LOHAS Five-Line Stave strategy. It calculates regression trend bands,
-a 20-week price channel, and combined buy/sell/wait classifications for
-Shenzhen, Shanghai, and Beijing stocks.
+**Status: archived research project (October 2026).** The question it was
+built to answer has an answer, and no further strategy or feature work is
+planned. The code still runs; [Running the code](#running-the-code) explains
+how.
 
-See [docs/lohas_stave_strategy.md](docs/lohas_stave_strategy.md) for the strategy,
-signal definitions, and known limitations.
+## The question
 
-**Research verdict:** the signals do not predict returns well enough to trade.
-The event study's findings vanished on a 2012-2020 holdout, and a rule picked
-each year from past data lost to the market after costs in 11 of 14 years.
-See [docs/conclusion.md](docs/conclusion.md) (Chinese) for why, and
-[docs/event_study.md](docs/event_study.md) for the evidence.
+Does the LOHAS Five-Line Stave (乐活五线谱) pick better Chinese A shares?
+The method fits a linear trend to each stock's last 3.5 years (875 trading
+days, "lohas") and last year (250 days, "year"), draws bands at one and two
+standard deviations around it, and adds a 20-week price channel. Where today's
+close sits among those bands gives a buy, sell, soar or wait signal. Only
+stocks in a confirmed uptrend get a model at all. The strategy and its signal
+codes are documented in [docs/lohas_stave_strategy.md](docs/lohas_stave_strategy.md).
 
-## Requirements
+## Answer
+
+**No.** The signals do not predict returns well enough to trade, and no way of
+using them could have been chosen in advance and made money after costs.
+
+## How it was tested
+
+The project is a Rails application that computes every signal for every
+Shanghai, Shenzhen and Beijing A share from TongdaXin daily files, and a
+Python research pipeline (`research/event_study/`) that replays the same
+engine across the whole market:
+
+- The replay matches the Ruby engine field by field on 914 of 914 stratified
+  samples.
+- Returns use dividend- and split-adjusted closes, and entry is the close
+  *after* the signal, so no trade uses the price that produced it.
+- Excess return is measured against the stocks the strategy could have picked
+  that day, with Newey-West errors for overlapping holding periods and Holm
+  correction for multiple tests.
+- The study was written on 2021-2026. The price files reach back to listing
+  and keep delisted stocks, so 2012-2020 became a holdout the study never saw,
+  free of survivorship bias.
+
+## What it found
+
+| Finding | 2021-2026 (study) | 2012-2020 (holdout) |
+|---|---|---|
+| Year-window buy minus sell, 10 days | +0.65% (t 3.3) | -0.09% (t -0.6) |
+| Year-window sell signal vs pool, 20 days | -1.21% (t -2.8) | +0.13% (t 0.5) |
+| Lohas uptrend pool (no signal) vs whole market, 60 days | -2.92% (t -3.2) | -1.14% (t -1.5) |
+| Lohas BUY4 vs pool, 20 days | -1.40% (t -2.9) | -1.04% (t -2.4) |
+
+- The two effects that survived correction in the study period are zero in
+  the holdout. Year by year, the buy-sell spread is positive in 9 of 15 years,
+  mostly by little, and the sell-signal stocks significantly beat the pool in
+  2012, 2013 and 2020; the study's result came from 2022 and 2024.
+- Walking forward one year at a time, picking the best long-only rule net of
+  costs on the years before and holding it through the next, beat the market
+  in 3 of 14 years and averaged -1.62% per 20 trading days.
+- What held in both periods is advice about what not to do: the uptrend
+  filter does not help (it lags the market in both, significantly only in the
+  study period), and BUY4 is not a buy point.
+
+## Why it does not work
+
+1. **The signals use only past closes, the cheapest information in the
+   market.** Everyone can draw the same lines; within the stocks the strategy
+   can pick, where a price sits among the bands says almost nothing about what
+   comes next.
+2. **It bets on reversion to the trend, and A shares do not reliably
+   revert.** In the falling markets of 2022 and 2024 broken stocks kept
+   falling, so the sell signal "worked"; in 2012, 2013 and 2020 the opposite
+   held. Which regime is coming is not known in advance.
+3. **The uptrend precondition is itself a handicap.** The stocks that rose
+   most over 3.5 years tend to lag afterwards, and a slope bar measured in
+   yuan per day leans towards high-priced stocks, which lagged in these years.
+4. **What effect there was is small and needs a short sale.** The spread
+   requires shorting the sell-signal stocks, which A-share retail investors
+   effectively cannot do; the long side alone is not significant after the
+   0.11% round-trip cost.
+
+The laddered entry and grid execution of the original method were not
+tested, but they sit on the same signals and cannot add a prediction the
+signals lack.
+
+## What is left to use
+
+- A credible negative answer, reached without trading real money on it.
+- A pipeline that turns any A-share stock-selection idea into a full-market,
+  out-of-sample test in a day or two: TongdaXin data, ex-rights adjustment,
+  vectorised replay, event study and walk-forward
+  ([research/event_study/](research/event_study/README.md)).
+- The web app, which still draws the stave and channel charts per stock.
+
+## Documents
+
+| Document | Contents |
+|---|---|
+| [docs/conclusion.md](docs/conclusion.md) | The verdict and the reasons, in one page (Chinese) |
+| [docs/event_study.md](docs/event_study.md) | The full study: method, tables, by-year results, holdout and walk-forward (section 12) (Chinese) |
+| [docs/lohas_stave_strategy.md](docs/lohas_stave_strategy.md) | The strategy, signal definitions and known limitations |
+| [docs/price_adjustment_impact.md](docs/price_adjustment_impact.md) | What switching to adjusted prices changed in the app's reports |
+| [research/event_study/README.md](research/event_study/README.md) | How to reproduce every number |
+
+## Running the code
+
+Stock Stave is a Ruby on Rails application. It computes the regression trend
+bands, the 20-week channel and the combined buy/sell/wait classification for
+every stock, refreshes them nightly from the official TongdaXin archive, and
+serves the charts. The signals it shows are the ones tested above: read them
+as a description of where a price sits, not as a recommendation.
+
+### Requirements
 
 - Ruby 3.4.10
 - Bundler 2.5.3
@@ -30,7 +123,7 @@ PowerShell:
 C:\Ruby34-x64\bin\ridk.cmd exec pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-libyaml
 ```
 
-## Setup
+### Setup
 
 From PowerShell in the repository directory:
 
@@ -50,7 +143,7 @@ The environments use separate databases:
 - Development and production: `db/stock.sqlite3`
 - Test: `db/test.sqlite3`
 
-## Price data
+### Price data
 
 Set `TDX_DATA_PATH` to the TongdaXin `vipdoc` directory. For example, in
 PowerShell:
@@ -67,7 +160,7 @@ When the variable is not set, the calculation engine uses:
 `<area>` is `sz`, `sh`, or `bj`. Each stock needs enough history for the chosen
 window plus the 20-week channel.
 
-## Adjusted prices
+### Adjusted prices
 
 Signals are derived from the raw TongdaXin close, and they always were. The
 *returns* the app reports are measured on dividend- and split-adjusted closes,
@@ -140,7 +233,7 @@ bundle exec rails "price_adjustment_impact[docs/price_adjustment_impact.md]"
 bundle exec rails "price_adjustment_impact[docs/price_adjustment_impact.zh.md,zh]"
 ```
 
-## Generate analysis data
+### Generate analysis data
 
 For normal daily operation, run:
 
@@ -180,7 +273,7 @@ stored history. Every daily run creates and integrity-checks a retained SQLite
 backup before either recalculation or signal-history writes, including nights
 when market coefficients are already current.
 
-### Schedule the Windows refresh
+#### Schedule the Windows refresh
 
 Install a daily Windows task (20:30 local time by default) from PowerShell:
 
@@ -204,7 +297,7 @@ scheduler evidence from a manual refresh. If Windows terminates a run at its fou
 limit, the next run safely recovers the empty lock after five hours and reports
 that recovery on the website. Choose a different time with `-At HH:mm`.
 
-### Schedule the Linux refresh
+#### Schedule the Linux refresh
 
 Run `bin/daily-refresh.sh` directly for a manual refresh, or install the
 systemd user timers. The refresh runs daily at 20:30 local time and retention
@@ -251,7 +344,7 @@ while the data ages. The status records the runner's own start time in
 `bin/install-daily-refresh-cron.sh` remains available as a deprecated fallback
 for Linux systems without systemd user services.
 
-### Signal email notifications
+#### Signal email notifications
 
 Every `daily_refresh` run diffs the two newest signal snapshot dates and
 reports stocks whose signal family changed — newly entering the buy zone,
@@ -285,7 +378,7 @@ bundle exec rails signal_notify      # prints the digest, sends when configured
 bundle exec rails "signal_notify[sz]"
 ```
 
-### Fundamentals screening
+#### Fundamentals screening
 
 The strategy's stated precondition is a fundamentally sound company, so the
 app can fetch per-stock fundamentals from Eastmoney's public HTTP endpoints
@@ -370,7 +463,7 @@ bundle exec rails "stave[sz]"
 
 Repeat with `sh` or `bj` as required.
 
-## Read broad-market indexes and ETFs with the same stave
+### Read broad-market indexes and ETFs with the same stave
 
 The five-line method is documented for ETFs as much as for stocks, and the
 TongdaXin daily files already carry the index and ETF daily bars, so a curated
@@ -392,7 +485,7 @@ like a downtrending stock. Note the slope bar is an absolute yuan-per-day
 threshold, so it is near-automatic for four-digit indexes and genuinely hard
 for low-priced ETFs — that quirk is the strategy's own, applied consistently.
 
-## Simulate the strategy on the saved signal history
+### Simulate the strategy on the saved signal history
 
 Once 20 or more trading dates of snapshots are recorded (see
 `backfill_signal_history` to rebuild history from existing price data), the
@@ -424,7 +517,7 @@ rate, and the grid entries broken down by depth weight) so the sizing choice is
 made on data, not vibes. The web app's signal-history page keeps showing the
 equal-weight account simulation.
 
-## Run the web application
+### Run the web application
 
 ```powershell
 bundle exec rails server
@@ -433,7 +526,7 @@ bundle exec rails server
 Open <http://localhost:3000/sz>, `/sh`, or `/bj`. Select a stock to view its
 one-year and 3.5-year stave and channel charts.
 
-### Read the app in English or Chinese
+#### Read the app in English or Chinese
 
 The app reads in English by default and can be switched to Chinese from the
 link above the page. The choice is remembered for the pages that follow, so
@@ -523,7 +616,7 @@ every 30 minutes before restarting that service. Inspect the current URL with
 journalctl --user -u stave-public-preview.service -u stave-public-preview-monitor.service
 ```
 
-## Tests
+### Tests
 
 Prepare the isolated test database once, then run the suite:
 
@@ -556,7 +649,7 @@ test suite, Zeitwerk autoload check, PowerShell automation syntax check,
 bundler-audit, Brakeman, schema consistency check, and whitespace validation on
 every push and pull request.
 
-## Troubleshooting
+### Troubleshooting
 
 - **Dev-server restarts on Windows:** Puma's in-place restart, triggered by
   touching `tmp/restart.txt`, fails on this setup with
