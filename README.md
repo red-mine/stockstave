@@ -98,6 +98,7 @@ signals lack.
 | [docs/ma_cross.md](docs/ma_cross.md) | Moving-average golden crosses, tested with the same pipeline: they underperform (Chinese) |
 | [docs/low_vol.md](docs/low_vol.md) | Low-volatility stock selection: no edge for calm stocks, but the most volatile decile lags in both periods (Chinese) |
 | [docs/fundamentals.md](docs/fundamentals.md) | Value, ROE and earnings surprise from point-in-time quarterly reports: none beats the market (Chinese) |
+| [docs/allocation.md](docs/allocation.md) | What not picking stocks would have earned: index-ETF stock/bond mixes rebalanced yearly, 2014-2026 and from 2005 (Chinese) |
 | [docs/lohas_stave_strategy.md](docs/lohas_stave_strategy.md) | The strategy, signal definitions and known limitations |
 | [docs/price_adjustment_impact.md](docs/price_adjustment_impact.md) | What switching to adjusted prices changed in the app's reports |
 | [research/event_study/README.md](research/event_study/README.md) | How to reproduce every number |
