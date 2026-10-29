@@ -156,7 +156,7 @@ class Portfolio
 
   def tracked_plans(today = Date.current)
     events = fund_events
-    plans.map { |plan| [plan, DcaTracker.new(plan, events: events.fetch(plan.proxy, []), today: today, rate: compare_rate).call] }
+    plans.map { |plan| [plan, DcaTracker.new(plan, events: events[plan.proxy], today: today, rate: compare_rate).call] }
   end
 
   # For each plan, {years => DcaTracker::Result or nil}: the plan had it
@@ -164,7 +164,7 @@ class Portfolio
   def plan_hindsight(today = Date.current)
     events = fund_events
     plans.to_h do |plan|
-      [plan.id, DcaTracker.hindsight(plan, events: events.fetch(plan.proxy, []), today: today, rate: compare_rate)]
+      [plan.id, DcaTracker.hindsight(plan, events: events[plan.proxy], today: today, rate: compare_rate)]
     end
   end
 

@@ -152,10 +152,11 @@
                 </td>
                 <td><%= "#{r.purchases.size} / #{plan.months}" %></td>
                 <td><%= money.(r.invested) %></td>
-                <td><%= r.priced ? money.(r.value) : t("common.dash") %></td>
-                <td class="<%= r.profit.negative? ? 'is-loss' : 'is-gain' %>"><%= r.priced ? "#{r.profit.negative? ? '−' : '+'}#{money.(r.profit.abs)} (#{format('%+.1f%%', r.return_pct)})" : t("common.dash") %></td>
-                <td><%= money.(r.deposit_value) %></td>
-                <td class="<%= r.versus_deposit.negative? ? 'is-loss' : 'is-gain' %>"><%= r.priced ? "#{r.versus_deposit.negative? ? '−' : '+'}#{money.(r.versus_deposit.abs)}" : t("common.dash") %></td>
+                <% bought = r.priced && r.purchases.any? %>
+                <td><%= bought ? money.(r.value) : t("common.dash") %></td>
+                <td class="<%= bought ? (r.profit.negative? ? 'is-loss' : 'is-gain') : '' %>"><%= bought ? "#{r.profit.negative? ? '−' : '+'}#{money.(r.profit.abs)} (#{format('%+.1f%%', r.return_pct)})" : t("common.dash") %></td>
+                <td><%= bought ? money.(r.deposit_value) : t("common.dash") %></td>
+                <td class="<%= bought ? (r.versus_deposit.negative? ? 'is-loss' : 'is-gain') : '' %>"><%= bought ? "#{r.versus_deposit.negative? ? '−' : '+'}#{money.(r.versus_deposit.abs)}" : t("common.dash") %></td>
                 <td class="portfolio-actions">
                   <%= button_to t("portfolio.holdings.remove"), portfolio_plan_path(plan.id), method: :delete, class: "button button-secondary", form: { data: { turbo_confirm: t("portfolio.holdings.confirm_remove", name: plan.name) } } %>
                 </td>

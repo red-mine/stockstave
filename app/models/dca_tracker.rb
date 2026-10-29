@@ -46,7 +46,7 @@ class DcaTracker
   # what it would be worth today. Answers "has this beaten a deposit?" from
   # history before the reader's own plan has bought anything. A horizon the
   # ETF's history does not reach is nil, never priced from a later close.
-  def self.hindsight(plan, events: [], today: Date.current, rate: BigDecimal("1.5"), years: HINDSIGHT_YEARS)
+  def self.hindsight(plan, events: nil, today: Date.current, rate: BigDecimal("1.5"), years: HINDSIGHT_YEARS)
     years.to_h do |y|
       start = today << (12 * y)
       past = plan.dup.tap { |p| p.start_on = start; p.months = 12 * y }
@@ -55,9 +55,12 @@ class DcaTracker
     end
   end
 
-  def initialize(plan, events: [], today: Date.current, rate: BigDecimal("1.5"))
+  # `events` is the ETF's dividend and split records; nil means they have
+  # not been fetched yet, which is not the same as an ETF that never paid.
+  def initialize(plan, events: nil, today: Date.current, rate: BigDecimal("1.5"))
     @plan = plan
-    @events = events
+    @events_known = !events.nil?
+    @events = events || []
     @today = today
     @rate = rate
   end
@@ -96,7 +99,7 @@ class DcaTracker
                next_date: next_date,
                done: purchases.size >= @plan.months,
                priced: true,
-               adjusted: @events.any?,
+               adjusted: @events_known,
                too_early: false)
   end
 
@@ -136,7 +139,7 @@ class DcaTracker
   def empty_result(priced:, too_early: false)
     zero = BigDecimal("0")
     Result.new(purchases: [], invested: zero, value: zero, as_of: nil, deposit_value: zero,
-               next_date: scheduled_date(0), done: false, priced: priced, adjusted: @events.any?,
+               next_date: scheduled_date(0), done: false, priced: priced, adjusted: @events_known,
                too_early: too_early)
   end
 end

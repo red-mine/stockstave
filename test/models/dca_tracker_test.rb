@@ -17,7 +17,7 @@ class DcaTrackerTest < ActiveSupport::TestCase
                         **overrides)
   end
 
-  def track(plan, events: [], today: Date.new(2026, 3, 20))
+  def track(plan, events: nil, today: Date.new(2026, 3, 20))
     Dir.mktmpdir do |root|
       write_day_file(root, "sh", "sh510310", ROWS)
       with_data_root(root) { DcaTracker.new(plan, events: events, today: today).call }
@@ -53,6 +53,12 @@ class DcaTrackerTest < ActiveSupport::TestCase
     expected = (NET / 4.0 + NET / 4.4) * 5.0 * (4.4 / 4.2) + NET
     assert_in_delta expected, r.value.to_f, 0.01
     assert r.adjusted
+  end
+
+  test "records not fetched yet differ from an ETF that never paid" do
+    assert_not track(plan).adjusted, "nothing fetched: dividends are not counted"
+    assert track(plan, events: []).adjusted, "fetched, none paid: nothing is missing"
+    assert_equal track(plan).value, track(plan, events: []).value
   end
 
   test "the TongdaXin duplicate of a record is applied once" do

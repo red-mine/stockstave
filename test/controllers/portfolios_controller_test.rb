@@ -165,6 +165,19 @@ class PortfoliosControllerTest < ActionDispatch::IntegrationTest
 
     assert_select ".portfolio-flash.is-notice", text: /could not be fetched/
     assert_equal 1, Portfolio.load(@path).plans.size
+    assert_select ".plan-detail", text: /Dividends not counted yet/
+  end
+
+  test "a plan that has not bought yet shows dashes and no dividend warning once fetched" do
+    with_etf_prices do
+      post portfolio_plans_path, params: { plan: { name: "Later", fund_code: "", proxy: "510310", amount: "1000",
+                                                   day: "10", start_on: (Date.current >> 1).iso8601, months: "12" } }
+      follow_redirect!
+    end
+
+    assert_select "#plans-table tbody tr[id^=plan-] td:nth-child(4)", text: "—"
+    assert_select "#plans-table tbody tr[id^=plan-] td:nth-child(5)", text: "—"
+    assert_select ".plan-detail", text: /Dividends not counted yet/, count: 0
   end
 
   test "a fund code in the ETF field is refused with a reason" do
