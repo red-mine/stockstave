@@ -758,3 +758,4 @@ a { color: var(--teal-dark); }
   .portfolio-form { padding: 16px; }
   .portfolio-hint, .portfolio-split { padding-left: 16px; padding-right: 16px; }
 }
+.portfolio-table tr.is-due td { background: rgba(181, 71, 71, 0.06); }

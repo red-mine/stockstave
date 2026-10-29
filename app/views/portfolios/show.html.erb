@@ -29,9 +29,58 @@
     </p>
   <% end %>
 
+  <% names = ->(hs) { hs.map(&:name).join(I18n.locale == :zh ? "、" : ", ") } %>
+  <% due_soon = @portfolio.due_soon(@today) %>
+  <% matured = @portfolio.matured(@today) %>
+  <% if matured.any? %>
+    <p class="portfolio-status is-action" id="matured-status"><%= t("portfolio.status.matured", names: names.(matured)) %></p>
+  <% end %>
+  <% if due_soon.any? %>
+    <p class="portfolio-status is-action" id="due-status"><%= t("portfolio.status.due_soon", days: Portfolio::DUE_SOON_DAYS, names: names.(due_soon)) %></p>
+  <% end %>
+  <% @portfolio.over_insured.each do |institution, sum| %>
+    <p class="portfolio-status is-action insured-status"><%= t("portfolio.status.over_insured", institution: institution, amount: money.(sum), limit: money.(Portfolio::INSURED_LIMIT)) %></p>
+  <% end %>
+
   <% stale = @portfolio.stale_holdings(@today) %>
   <% if stale.any? %>
-    <p class="portfolio-status is-stale"><%= t("portfolio.status.stale", days: Portfolio::STALE_DAYS, names: stale.map(&:name).join(I18n.locale == :zh ? "、" : ", ")) %></p>
+    <p class="portfolio-status is-stale"><%= t("portfolio.status.stale", days: Portfolio::STALE_DAYS, names: names.(stale)) %></p>
+  <% end %>
+
+  <% if @portfolio.maturities.any? %>
+    <section class="panel portfolio-panel" aria-labelledby="maturity-title">
+      <div class="panel-heading"><h2 id="maturity-title"><%= t("portfolio.maturity.title") %></h2></div>
+      <div class="table-scroll">
+        <table class="stock-table portfolio-table" id="maturity-table">
+          <thead>
+            <tr>
+              <th class="text-left"><%= t("portfolio.maturity.date") %></th>
+              <th><%= t("portfolio.maturity.days") %></th>
+              <th class="text-left"><%= t("portfolio.holdings.name") %></th>
+              <th class="text-left"><%= t("portfolio.holdings.institution") %></th>
+              <th><%= t("portfolio.holdings.amount") %></th>
+              <th><%= t("portfolio.maturity.running") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% running = 0 %>
+            <% @portfolio.maturities.each do |h| %>
+              <% running += h.amount %>
+              <% left = h.days_left(@today) %>
+              <tr class="<%= left <= Portfolio::DUE_SOON_DAYS ? 'is-due' : '' %>">
+                <td class="text-left"><strong><%= h.matures_on.iso8601 %></strong></td>
+                <td><%= left.negative? ? t("portfolio.maturity.past", days: -left) : t("portfolio.maturity.left", days: left) %></td>
+                <td class="text-left"><%= h.name %></td>
+                <td class="text-left"><%= h.institution || t("common.dash") %></td>
+                <td><%= money.(h.amount) %></td>
+                <td><%= money.(running) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <p class="portfolio-hint"><%= t("portfolio.maturity.hint") %></p>
+    </section>
   <% end %>
 
   <section class="panel portfolio-panel" aria-labelledby="mix-title">
@@ -104,7 +153,9 @@
             <th class="text-left"><%= t("portfolio.holdings.name") %></th>
             <th class="text-left"><%= t("portfolio.holdings.code") %></th>
             <th class="text-left"><%= t("portfolio.holdings.bucket") %></th>
+            <th class="text-left"><%= t("portfolio.holdings.institution") %></th>
             <th><%= t("portfolio.holdings.amount") %></th>
+            <th class="text-left"><%= t("portfolio.holdings.matures_on") %></th>
             <th><%= t("portfolio.holdings.updated") %></th>
             <th></th>
           </tr>
@@ -115,7 +166,9 @@
               <td class="text-left"><%= text_field_tag "holding[name]", h.name, form: "holding-form-#{h.id}", required: true, "aria-label": t("portfolio.holdings.name") %></td>
               <td class="text-left"><%= text_field_tag "holding[code]", h.code, form: "holding-form-#{h.id}", size: 8, "aria-label": t("portfolio.holdings.code") %></td>
               <td class="text-left"><%= select_tag "holding[bucket]", options_for_select(Portfolio::BUCKETS.map { |b| [t("portfolio.buckets.#{b}"), b] }, h.bucket), form: "holding-form-#{h.id}", "aria-label": t("portfolio.holdings.bucket") %></td>
+              <td class="text-left"><%= text_field_tag "holding[institution]", h.institution, form: "holding-form-#{h.id}", size: 8, "aria-label": t("portfolio.holdings.institution") %></td>
               <td><%= text_field_tag "holding[amount]", h.amount.to_s("F"), form: "holding-form-#{h.id}", inputmode: "decimal", size: 10, "aria-label": t("portfolio.holdings.amount") %></td>
+              <td class="text-left"><%= date_field_tag "holding[matures_on]", h.matures_on, form: "holding-form-#{h.id}", "aria-label": t("portfolio.holdings.matures_on") %></td>
               <td class="<%= stale.include?(h) ? 'is-off' : '' %>"><%= h.updated_on ? h.updated_on.iso8601 : t("common.dash") %></td>
               <td class="portfolio-actions">
                 <%= submit_tag t("portfolio.holdings.save"), form: "holding-form-#{h.id}", class: "button button-secondary", name: nil %>
@@ -135,7 +188,9 @@
       <label><%= t("portfolio.holdings.name") %><%= f.text_field :name, required: true, placeholder: t("portfolio.holdings.name_example") %></label>
       <label><%= t("portfolio.holdings.code") %><%= f.text_field :code, size: 8, placeholder: "511360" %></label>
       <label><%= t("portfolio.holdings.bucket") %><%= f.select :bucket, Portfolio::BUCKETS.map { |b| [t("portfolio.buckets.#{b}"), b] } %></label>
+      <label><%= t("portfolio.holdings.institution") %><%= f.text_field :institution, size: 8, placeholder: t("portfolio.holdings.institution_example") %></label>
       <label><%= t("portfolio.holdings.amount") %><%= f.text_field :amount, required: true, inputmode: "decimal", placeholder: "10000" %></label>
+      <label><%= t("portfolio.holdings.matures_on") %><%= f.date_field :matures_on %></label>
       <%= f.submit t("portfolio.holdings.add"), class: "button button-primary" %>
     <% end %>
     <p class="portfolio-hint"><%= t("portfolio.holdings.hint") %></p>

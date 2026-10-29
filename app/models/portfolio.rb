@@ -20,14 +20,25 @@ class Portfolio
   DEFAULT_BAND = 5            # percentage points of drift before acting
   DEFAULT_INTERVAL = 12       # months between scheduled rebalances
   STALE_DAYS = 31             # an amount older than this is probably out of date
+  DUE_SOON_DAYS = 7           # warn this many days before a holding matures
+  # Deposit insurance (存款保险) covers principal plus interest up to this
+  # much per depositor per bank. It covers deposits only, not funds or bonds.
+  INSURED_LIMIT = BigDecimal("500000")
 
   class Invalid < StandardError; end
 
-  Holding = Struct.new(:id, :name, :code, :bucket, :amount, :updated_on, keyword_init: true) do
+  # `institution` (the bank or platform) and `matures_on` (when a term
+  # deposit or bond pays out) are optional: a money fund has neither date nor
+  # deposit insurance, a term deposit has both.
+  Holding = Struct.new(:id, :name, :code, :bucket, :amount, :updated_on, :institution, :matures_on,
+                       keyword_init: true) do
     def to_h
       { "id" => id, "name" => name, "code" => code, "bucket" => bucket,
-        "amount" => amount.to_s("F"), "updated_on" => updated_on&.iso8601 }
+        "amount" => amount.to_s("F"), "updated_on" => updated_on&.iso8601,
+        "institution" => institution, "matures_on" => matures_on&.iso8601 }
     end
+
+    def days_left(today) = matures_on && (matures_on - today).to_i
   end
 
   # One row of the comparison: where a bucket is against where it should be.
@@ -52,7 +63,8 @@ class Portfolio
     @last_rebalanced_on = parse_date(data["last_rebalanced_on"])
     @holdings = Array(data["holdings"]).map do |h|
       Holding.new(id: h["id"], name: h["name"], code: h["code"].presence, bucket: h["bucket"],
-                  amount: BigDecimal(h["amount"].to_s), updated_on: parse_date(h["updated_on"]))
+                  amount: BigDecimal(h["amount"].to_s), updated_on: parse_date(h["updated_on"]),
+                  institution: h["institution"].presence, matures_on: parse_date(h["matures_on"]))
     end
   end
 
@@ -89,6 +101,25 @@ class Portfolio
     holdings.select { |h| h.updated_on.nil? || (today - h.updated_on).to_i > STALE_DAYS }
   end
 
+  # Holdings with a maturity date, soonest first: what pays out when, so the
+  # money for a known expense is there on the day.
+  def maturities = holdings.select(&:matures_on).sort_by(&:matures_on)
+
+  def due_soon(today = Date.current)
+    maturities.select { |h| h.days_left(today).between?(0, DUE_SOON_DAYS) }
+  end
+
+  def matured(today = Date.current) = maturities.select { |h| h.days_left(today).negative? }
+
+  # Institutions whose listed holdings add up to more than deposit insurance
+  # covers. Only deposits are insured, so this is a prompt to check, not a
+  # verdict: a fund held through a bank's app is not a deposit.
+  def over_insured
+    holdings.select(&:institution).group_by(&:institution)
+            .transform_values { |hs| hs.sum(BigDecimal("0"), &:amount) }
+            .select { |_, sum| sum > INSURED_LIMIT }
+  end
+
   # New money goes to the buckets that are short of target first, so saving
   # alone moves the mix back without selling anything; what is left after
   # every bucket reaches its target is split at the target weights.
@@ -123,14 +154,14 @@ class Portfolio
     raise Invalid, "targets"
   end
 
-  def add_holding(name:, code:, bucket:, amount:, today: Date.current)
-    holdings << build_holding(SecureRandom.hex(6), name, code, bucket, amount, today)
+  def add_holding(today: Date.current, **fields)
+    holdings << build_holding(SecureRandom.hex(6), today, **fields)
     save
   end
 
-  def update_holding(id, name:, code:, bucket:, amount:, today: Date.current)
+  def update_holding(id, today: Date.current, **fields)
     index = holdings.index { |h| h.id == id } or raise Invalid, "holding"
-    holdings[index] = build_holding(id, name, code, bucket, amount, today)
+    holdings[index] = build_holding(id, today, **fields)
     save
   end
 
@@ -161,7 +192,7 @@ class Portfolio
 
   private
 
-  def build_holding(id, name, code, bucket, amount, today)
+  def build_holding(id, today, name:, code:, bucket:, amount:, institution: nil, matures_on: nil)
     name = name.to_s.strip
     raise Invalid, "name" if name.empty? || name.length > 60
     raise Invalid, "bucket" unless BUCKETS.include?(bucket.to_s)
@@ -169,8 +200,14 @@ class Portfolio
     value = BigDecimal(amount.to_s.delete(",").strip)
     raise Invalid, "amount" if value.negative? || value > 1_000_000_000
 
+    institution = institution.to_s.strip.presence
+    raise Invalid, "institution" if institution && institution.length > 40
+
+    maturity = matures_on.presence && parse_date(matures_on)
+    raise Invalid, "matures_on" if matures_on.present? && maturity.nil?
+
     Holding.new(id: id, name: name, code: code.to_s.strip.presence&.first(12), bucket: bucket.to_s,
-                amount: value.round(2), updated_on: today)
+                amount: value.round(2), updated_on: today, institution: institution, matures_on: maturity)
   rescue ArgumentError, TypeError
     raise Invalid, "amount"
   end

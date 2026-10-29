@@ -129,6 +129,51 @@ class PortfolioTest < ActiveSupport::TestCase
     assert_raises(Portfolio::Invalid) { p.remove_holding("missing") }
   end
 
+  test "maturities list term holdings soonest first and flag what is due or past" do
+    p = portfolio
+    today = Date.new(2026, 10, 29)
+    p.add_holding(name: "6m", code: "", bucket: "cash", amount: "250000", institution: "B", matures_on: "2027-04-29")
+    p.add_holding(name: "3m", code: "", bucket: "cash", amount: "250000", institution: "C", matures_on: "2026-11-03")
+    p.add_holding(name: "old", code: "", bucket: "bond", amount: "1000", matures_on: "2026-10-01")
+    p.add_holding(name: "fund", code: "", bucket: "cash", amount: "200000")
+
+    reloaded = Portfolio.load(@path)
+    assert_equal %w[old 3m 6m], reloaded.maturities.map(&:name)
+    assert_equal ["3m"], reloaded.due_soon(today).map(&:name)
+    assert_equal ["old"], reloaded.matured(today).map(&:name)
+    assert_equal 5, reloaded.holdings.find { |h| h.name == "3m" }.days_left(today)
+    assert_equal "C", reloaded.holdings.find { |h| h.name == "3m" }.institution
+  end
+
+  test "more than deposit insurance covers at one bank is flagged" do
+    p = portfolio
+    p.add_holding(name: "a", code: "", bucket: "cash", amount: "300000", institution: "A")
+    p.add_holding(name: "b", code: "", bucket: "bond", amount: "200000", institution: "A")
+    p.add_holding(name: "c", code: "", bucket: "cash", amount: "500000", institution: "B")
+    assert_empty p.over_insured, "exactly the limit is covered"
+
+    p.add_holding(name: "d", code: "", bucket: "cash", amount: "0.01", institution: "A")
+    assert_equal ["A"], p.over_insured.keys
+    assert_equal BigDecimal("500000.01"), p.over_insured["A"]
+  end
+
+  test "a maturity date must be a real date or left empty" do
+    p = portfolio
+
+    assert_raises(Portfolio::Invalid) { p.add_holding(name: "x", code: "", bucket: "cash", amount: "1", matures_on: "2026-13-40") }
+    p.add_holding(name: "x", code: "", bucket: "cash", amount: "1", matures_on: "", institution: " ")
+    assert_nil p.holdings.last.matures_on
+    assert_nil p.holdings.last.institution
+  end
+
+  test "files saved before maturities existed still load" do
+    File.write(@path, JSON.generate({ "holdings" => [{ "id" => "x", "name" => "old", "bucket" => "cash", "amount" => "5", "updated_on" => "2026-10-01" }] }))
+
+    h = Portfolio.load(@path).holdings.first
+    assert_nil h.matures_on
+    assert_nil h.institution
+  end
+
   test "saving replaces the file whole and leaves no temporary files" do
     portfolio(cash: 1)
 

@@ -82,6 +82,43 @@ class PortfoliosControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "term holdings appear in the maturity list with a running total and alerts" do
+    today = Date.current
+    p = Portfolio.new(@path)
+    p.add_holding(name: "Soon", code: "", bucket: "cash", amount: "250000", institution: "Bank B", matures_on: (today + 3).iso8601)
+    p.add_holding(name: "Later", code: "", bucket: "cash", amount: "300000", institution: "Bank A", matures_on: (today + 90).iso8601)
+    p.add_holding(name: "Also A", code: "", bucket: "bond", amount: "300000", institution: "Bank A")
+
+    with_portfolio_file { get portfolio_path }
+
+    assert_select "#maturity-table tbody tr", 2
+    assert_select "#maturity-table tbody tr:first-child td:last-child", text: "¥250,000"
+    assert_select "#maturity-table tbody tr:last-child td:last-child", text: "¥550,000"
+    assert_select "#maturity-table tbody tr.is-due", 1
+    assert_select "#due-status", text: /Soon/
+    assert_select ".insured-status", 1
+    assert_select ".insured-status", text: /Bank A holds ¥600,000/
+  end
+
+  test "a holding's bank and maturity are saved from the form" do
+    with_portfolio_file do
+      post portfolio_holdings_path, params: { holding: { name: "3m deposit", code: "", bucket: "cash", amount: "250000",
+                                                         institution: "Bank B", matures_on: "2027-01-29" } }
+    end
+
+    h = Portfolio.load(@path).holdings.first
+    assert_equal "Bank B", h.institution
+    assert_equal Date.new(2027, 1, 29), h.matures_on
+  end
+
+  test "no maturity list without dated holdings" do
+    Portfolio.new(@path).add_holding(name: "fund", code: "", bucket: "cash", amount: "1")
+
+    with_portfolio_file { get portfolio_path }
+
+    assert_select "#maturity-table", 0
+  end
+
   test "the page reads in Chinese when asked" do
     with_portfolio_file do
       get locale_path("zh"), headers: { "HTTP_REFERER" => "http://www.example.com/portfolio" }

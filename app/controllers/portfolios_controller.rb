@@ -65,7 +65,8 @@ class PortfoliosController < ApplicationController
 
   def holding_params
     h = params.require(:holding)
-    { name: h[:name], code: h[:code], bucket: h[:bucket], amount: h[:amount] }
+    { name: h[:name], code: h[:code], bucket: h[:bucket], amount: h[:amount],
+      institution: h[:institution], matures_on: h[:matures_on] }
   end
 
   def error_message(error)
