@@ -670,6 +670,14 @@ bin/rails funds:status    # list and purchase status only, in seconds
 Details fetched within a week are not asked for again, so a rerun resumes
 and a weekly refresh is quick. Tracking error is not checked yet.
 
+To refresh every week on Windows (Saturday 09:00 by default, missed runs
+start when the computer is next on, log in `log\funds-refresh\latest.log`):
+
+```powershell
+pwsh -File bin\install-weekly-funds-task.ps1             # or -Day Sunday -At 08:00
+Unregister-ScheduledTask -TaskName "Stock Stave Weekly Fund Refresh"   # to remove it
+```
+
 ### Tests
 
 Prepare the isolated test database once, then run the suite:
