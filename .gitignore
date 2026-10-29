@@ -40,3 +40,6 @@ vipdoc
 
 # Ignore the agent's project-local workspace (session memory, scratch state).
 /.workbuddy/
+
+# Python bytecode
+__pycache__/
