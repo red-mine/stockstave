@@ -1,0 +1,12 @@
+[
+  {"text": "vol60 low-vol decile vs pool, 20d (claimed +)", "label": "vol60|LOW|state|universe", "h": 20, "sign": 1},
+  {"text": "vol60 low-vol decile vs pool, 60d (claimed +)", "label": "vol60|LOW|state|universe", "h": 60, "sign": 1},
+  {"text": "vol60 low-vol decile vs market, 60d (claimed +)", "label": "vol60|LOW|state|market", "h": 60, "sign": 1},
+  {"text": "vol60 high-vol decile vs pool, 20d (claimed -)", "label": "vol60|HIGH|state|universe", "h": 20, "sign": -1},
+  {"text": "vol60 low minus high, 20d (claimed +)", "label": "vol60|LOW-HIGH|state", "h": 20, "sign": 1},
+  {"text": "vol20 low-vol decile vs pool, 20d (claimed +)", "label": "vol20|LOW|state|universe", "h": 20, "sign": 1},
+  {"text": "vol20 low-vol decile vs pool, 60d (claimed +)", "label": "vol20|LOW|state|universe", "h": 60, "sign": 1},
+  {"text": "vol20 low-vol decile vs market, 60d (claimed +)", "label": "vol20|LOW|state|market", "h": 60, "sign": 1},
+  {"text": "vol20 high-vol decile vs pool, 20d (claimed -)", "label": "vol20|HIGH|state|universe", "h": 20, "sign": -1},
+  {"text": "vol20 low minus high, 20d (claimed +)", "label": "vol20|LOW-HIGH|state", "h": 20, "sign": 1}
+]

@@ -75,7 +75,8 @@ Decide the claims and the holdout before looking at the holdout: write the
 findings into a claims file (see `five_line_claims.json` and the docstring
 of `out_of_sample.py`) from the study period alone, then run the holdout
 once. `ma_cross_signals.py` with `ma_cross_claims.json` is a second worked
-example, written up in [docs/ma_cross.md](../../docs/ma_cross.md). Judge the idea by the walk-forward net of costs against the market,
+example, written up in [docs/ma_cross.md](../../docs/ma_cross.md); `low_vol_signals.py`
+is a third ([docs/low_vol.md](../../docs/low_vol.md)). Judge the idea by the walk-forward net of costs against the market,
 not by the study-period tables.
 
 | File | Role |
@@ -92,6 +93,7 @@ not by the study-period tables.
 | `five_line_claims.json` | The report's findings, as tested in section 12 |
 | `momentum_signals.py` | Example signal source for a rule that is not the five-line engine |
 | `ma_cross_signals.py`, `ma_cross_claims.json` | Moving-average golden/death crosses and their claims ([docs/ma_cross.md](../../docs/ma_cross.md)) |
+| `low_vol_signals.py`, `low_vol_claims.json` | Volatility deciles and their claims ([docs/low_vol.md](../../docs/low_vol.md)) |
 
 The TDX files are append-only, so pinning `--end` (default 2026-10-13) keeps
 the replay stable while the nightly refresh keeps adding days.
