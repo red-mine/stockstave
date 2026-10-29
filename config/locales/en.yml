@@ -460,6 +460,12 @@ en:
       done: " All purchases made."
       no_dividends: " Dividends not counted yet: press Update dividend records."
       no_prices: "No TongdaXin prices for %{proxy}: check the code."
+      too_early: "The plan starts before %{proxy} listed, so it cannot be valued."
+      hindsight:
+        title: "Had it started earlier"
+        line: "Started %{years} yr ago (%{count} purchases): put in %{invested}, worth %{value} now (%{pct}), %{versus} against a deposit"
+        unavailable: "Started %{years} yr ago: the ETF had not listed yet."
+        note: "Real past prices with dividends, the same day and amount each month, compared with today's %{rate}% deposit rate; past deposit rates were higher. Past results do not promise future ones."
       each: "Each purchase"
       compare_rate: "Deposit rate to compare (% a year)"
       refresh: "Update dividend records"

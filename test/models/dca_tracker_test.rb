@@ -91,6 +91,40 @@ class DcaTrackerTest < ActiveSupport::TestCase
     assert_empty r.purchases
   end
 
+  test "a plan starting before the ETF listed is not priced from a later close" do
+    r = track(plan(start_on: Date.new(2025, 12, 10)))
+
+    assert r.too_early
+    assert_empty r.purchases
+  end
+
+  test "hindsight replays the plan from each horizon the history reaches" do
+    today = Date.new(2026, 3, 20)
+    past = Dir.mktmpdir do |root|
+      write_day_file(root, "sh", "sh510310", ROWS)
+      with_data_root(root) { DcaTracker.hindsight(plan(start_on: Date.new(2026, 11, 10)), today: today, years: [1, 3]) }
+    end
+
+    # one year back starts in March 2025, before the fixture's first close
+    assert_nil past[1]
+    assert_nil past[3]
+
+    mine = plan(months: 4)
+    recent = Dir.mktmpdir do |root|
+      rows = [[Date.new(2025, 3, 10), 30.0]] + ROWS
+      write_day_file(root, "sh", "sh510310", rows)
+      with_data_root(root) { DcaTracker.hindsight(mine, today: today, years: [1]) }
+    end
+
+    r = recent[1]
+    assert_equal Date.new(2025, 3, 10), r.purchases.first.date
+    # twelve monthly purchases; the fixture has no closes from April to
+    # December, so those months buy at the first close after them
+    assert_equal 12, r.purchases.size
+    assert_equal 4, mine.months, "the reader's own plan is left as it was"
+    assert_equal Date.new(2026, 1, 10), mine.start_on
+  end
+
   test "codes are read the way people type them" do
     assert_equal "sh510310", DcaTracker.normalize("510310")
     assert_equal "sz159919", DcaTracker.normalize(" 159919 ")

@@ -152,6 +152,8 @@ class PortfoliosControllerTest < ActionDispatch::IntegrationTest
     assert_select "#plans-table tbody tr[id^=plan-]", 1
     assert_select "#plans-table tbody tr[id^=plan-] td:nth-child(3)", text: /¥[1-2],000/
     assert_select "#plans-table .plan-detail", text: /Valued at the close of/
+    # the fixture holds 40 days of prices: too short for any hindsight year
+    assert_select ".plan-hindsight li", text: /had not listed yet/, count: 3
   end
 
   test "a plan whose dividends could not be fetched is still added, with a note" do

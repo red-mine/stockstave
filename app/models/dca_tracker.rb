@@ -17,7 +17,7 @@ class DcaTracker
 
   Purchase = Struct.new(:date, :amount, :price, :units, keyword_init: true)
   Result = Struct.new(:purchases, :invested, :value, :as_of, :deposit_value, :next_date, :done,
-                      :priced, :adjusted, keyword_init: true) do
+                      :priced, :adjusted, :too_early, keyword_init: true) do
     def profit = value - invested
     def return_pct = invested.zero? ? 0.0 : (profit / invested * 100).to_f
     def versus_deposit = value - deposit_value
@@ -40,6 +40,21 @@ class DcaTracker
     nil
   end
 
+  HINDSIGHT_YEARS = [1, 3, 5].freeze
+
+  # The same plan had it started `years` ago and run every month since:
+  # what it would be worth today. Answers "has this beaten a deposit?" from
+  # history before the reader's own plan has bought anything. A horizon the
+  # ETF's history does not reach is nil, never priced from a later close.
+  def self.hindsight(plan, events: [], today: Date.current, rate: BigDecimal("1.5"), years: HINDSIGHT_YEARS)
+    years.to_h do |y|
+      start = today << (12 * y)
+      past = plan.dup.tap { |p| p.start_on = start; p.months = 12 * y }
+      result = new(past, events: events, today: today, rate: rate).call
+      [y, result.priced && !result.too_early && result.purchases.any? ? result : nil]
+    end
+  end
+
   def initialize(plan, events: [], today: Date.current, rate: BigDecimal("1.5"))
     @plan = plan
     @events = events
@@ -52,6 +67,10 @@ class DcaTracker
     return empty_result(priced: false) if series.empty?
 
     dates = series.map(&:first)
+    # A plan that starts before the ETF listed would otherwise buy its first
+    # months at a close from after they were due.
+    return empty_result(priced: true, too_early: true) if scheduled_date(0) < dates.first
+
     last_date = dates.last
     purchases = []
     next_date = nil
@@ -77,7 +96,8 @@ class DcaTracker
                next_date: next_date,
                done: purchases.size >= @plan.months,
                priced: true,
-               adjusted: @events.any?)
+               adjusted: @events.any?,
+               too_early: false)
   end
 
   private
@@ -113,9 +133,10 @@ class DcaTracker
     end.round(2)
   end
 
-  def empty_result(priced:)
+  def empty_result(priced:, too_early: false)
     zero = BigDecimal("0")
     Result.new(purchases: [], invested: zero, value: zero, as_of: nil, deposit_value: zero,
-               next_date: scheduled_date(0), done: false, priced: priced, adjusted: @events.any?)
+               next_date: scheduled_date(0), done: false, priced: priced, adjusted: @events.any?,
+               too_early: too_early)
   end
 end

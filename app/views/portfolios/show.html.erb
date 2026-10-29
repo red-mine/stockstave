@@ -164,6 +164,8 @@
                 <td colspan="8" class="text-left">
                   <% if !r.priced %>
                     <%= t("portfolio.plans.no_prices", proxy: plan.proxy.upcase) %>
+                  <% elsif r.too_early %>
+                    <%= t("portfolio.plans.too_early", proxy: plan.proxy.upcase) %>
                   <% else %>
                     <%= t("portfolio.plans.as_of", date: r.as_of.iso8601) %>
                     <% if r.done %><%= t("portfolio.plans.done") %><% elsif r.next_date %><%= t("portfolio.plans.next", date: r.next_date.iso8601) %><% end %>
@@ -188,6 +190,26 @@
                         </table>
                       </details>
                     <% end %>
+                  <% end %>
+                  <% if (past = @hindsight[plan.id]).present? %>
+                    <div class="plan-hindsight">
+                      <strong><%= t("portfolio.plans.hindsight.title") %></strong>
+                      <ul>
+                        <% past.each do |years, h| %>
+                          <% if h %>
+                            <li class="<%= h.versus_deposit.negative? ? 'is-loss' : 'is-gain' %>">
+                              <%= t("portfolio.plans.hindsight.line", years: years, count: h.purchases.size,
+                                    invested: money.(h.invested), value: money.(h.value),
+                                    pct: format("%+.1f%%", h.return_pct),
+                                    versus: "#{h.versus_deposit.negative? ? '−' : '+'}#{money.(h.versus_deposit.abs)}") %>
+                            </li>
+                          <% else %>
+                            <li><%= t("portfolio.plans.hindsight.unavailable", years: years) %></li>
+                          <% end %>
+                        <% end %>
+                      </ul>
+                      <small><%= t("portfolio.plans.hindsight.note", rate: @portfolio.compare_rate.to_s("F")) %></small>
+                    </div>
                   <% end %>
                 </td>
               </tr>

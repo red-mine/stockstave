@@ -159,6 +159,15 @@ class Portfolio
     plans.map { |plan| [plan, DcaTracker.new(plan, events: events.fetch(plan.proxy, []), today: today, rate: compare_rate).call] }
   end
 
+  # For each plan, {years => DcaTracker::Result or nil}: the plan had it
+  # started that many years ago (DcaTracker.hindsight).
+  def plan_hindsight(today = Date.current)
+    events = fund_events
+    plans.to_h do |plan|
+      [plan.id, DcaTracker.hindsight(plan, events: events.fetch(plan.proxy, []), today: today, rate: compare_rate)]
+    end
+  end
+
   def empty? = holdings.empty?
 
   def total = holdings.sum(BigDecimal("0"), &:amount)

@@ -10,6 +10,7 @@ class PortfoliosController < ApplicationController
     @today = Date.current
     @rows = @portfolio.rows
     @tracked = @portfolio.tracked_plans(@today)
+    @hindsight = @portfolio.plan_hindsight(@today)
     @new_money = params[:new_money].to_s.delete(",").strip.presence
     return unless @new_money
 

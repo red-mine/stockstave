@@ -458,6 +458,12 @@ zh:
       done: "已全部投完。"
       no_dividends: "还没计入分红：点“更新分红记录”。"
       no_prices: "通达信里没有 %{proxy} 的行情，请检查代码。"
+      too_early: "计划开始时 %{proxy} 还没上市，没法估算。"
+      hindsight:
+        title: "如果早点开始"
+        line: "%{years} 年前开始（%{count} 期）：投入 %{invested}，现在值 %{value}（%{pct}），比定期 %{versus}"
+        unavailable: "%{years} 年前：这只 ETF 还没上市，没有数据。"
+        note: "用真实的历史行情（含分红），每月同一天、同样金额，和现在 %{rate}% 的定期利率比；过去几年的定期利率其实更高。过去的表现不代表未来。"
       each: "每一期"
       compare_rate: "对比的定期利率（%/年）"
       refresh: "更新分红记录"
