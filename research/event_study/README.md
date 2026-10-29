@@ -76,7 +76,9 @@ findings into a claims file (see `five_line_claims.json` and the docstring
 of `out_of_sample.py`) from the study period alone, then run the holdout
 once. `ma_cross_signals.py` with `ma_cross_claims.json` is a second worked
 example, written up in [docs/ma_cross.md](../../docs/ma_cross.md); `low_vol_signals.py`
-is a third ([docs/low_vol.md](../../docs/low_vol.md)). Judge the idea by the walk-forward net of costs against the market,
+is a third ([docs/low_vol.md](../../docs/low_vol.md)), and `fundamental_signals.py`,
+fed by `fetch_financials.py`, a fourth that uses reports instead of prices
+([docs/fundamentals.md](../../docs/fundamentals.md)). Judge the idea by the walk-forward net of costs against the market,
 not by the study-period tables.
 
 | File | Role |
@@ -94,6 +96,8 @@ not by the study-period tables.
 | `momentum_signals.py` | Example signal source for a rule that is not the five-line engine |
 | `ma_cross_signals.py`, `ma_cross_claims.json` | Moving-average golden/death crosses and their claims ([docs/ma_cross.md](../../docs/ma_cross.md)) |
 | `low_vol_signals.py`, `low_vol_claims.json` | Volatility deciles and their claims ([docs/low_vol.md](../../docs/low_vol.md)) |
+| `fetch_financials.py` | Quarterly reports with announcement dates from the TDX servers (pytdx) |
+| `fundamental_signals.py`, `fundamental_claims.json` | Value, ROE and earnings-surprise deciles, point in time, and their claims ([docs/fundamentals.md](../../docs/fundamentals.md)) |
 
 The TDX files are append-only, so pinning `--end` (default 2026-10-13) keeps
 the replay stable while the nightly refresh keeps adding days.

@@ -1,0 +1,16 @@
+[
+  {"text": "ep cheapest decile vs pool, 20d (claimed +)", "label": "ep|TOP|state|universe", "h": 20, "sign": 1},
+  {"text": "ep cheapest decile vs pool, 60d (claimed +)", "label": "ep|TOP|state|universe", "h": 60, "sign": 1},
+  {"text": "ep cheapest decile vs market, 60d (claimed +)", "label": "ep|TOP|state|market", "h": 60, "sign": 1},
+  {"text": "ep cheap minus dear, 60d (claimed +)", "label": "ep|TOP-BOTTOM|state", "h": 60, "sign": 1},
+  {"text": "bp cheapest decile vs pool, 20d (claimed +)", "label": "bp|TOP|state|universe", "h": 20, "sign": 1},
+  {"text": "bp cheapest decile vs pool, 60d (claimed +)", "label": "bp|TOP|state|universe", "h": 60, "sign": 1},
+  {"text": "bp cheapest decile vs market, 60d (claimed +)", "label": "bp|TOP|state|market", "h": 60, "sign": 1},
+  {"text": "bp cheap minus dear, 60d (claimed +)", "label": "bp|TOP-BOTTOM|state", "h": 60, "sign": 1},
+  {"text": "roe top decile vs pool, 60d (claimed +)", "label": "roe|TOP|state|universe", "h": 60, "sign": 1},
+  {"text": "roe top decile vs market, 60d (claimed +)", "label": "roe|TOP|state|market", "h": 60, "sign": 1},
+  {"text": "roe top minus bottom, 60d (claimed +)", "label": "roe|TOP-BOTTOM|state", "h": 60, "sign": 1},
+  {"text": "sue biggest beats vs pool, 20d (claimed +)", "label": "sue|TOP|state|universe", "h": 20, "sign": 1},
+  {"text": "sue biggest beats vs pool, 60d (claimed +)", "label": "sue|TOP|state|universe", "h": 60, "sign": 1},
+  {"text": "sue beats minus misses, 20d (claimed +)", "label": "sue|TOP-BOTTOM|state", "h": 20, "sign": 1}
+]
