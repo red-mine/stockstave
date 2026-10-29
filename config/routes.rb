@@ -15,6 +15,7 @@ Rails.application.routes.draw do
     delete "/portfolio/plans/:id", to: "portfolios#destroy_plan", as: :portfolio_plan
     patch "/portfolio/compare_rate", to: "portfolios#update_compare_rate", as: :portfolio_compare_rate
     post "/portfolio/fund_events", to: "portfolios#refresh_fund_events", as: :portfolio_fund_events
+    get "/funds", to: "funds#index", as: :funds
   end
 
   get "/locale/:locale", to: "locale#show", as: :locale,

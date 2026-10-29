@@ -1,0 +1,109 @@
+<% badge = ->(v) { content_tag(:span, t("funds.verdicts.#{v}"), class: "fund-badge fund-#{v}") } %>
+<% yi = ->(f) { f.size ? format("%.1f", (f.size / 100_000_000).to_f) : t("common.dash") } %>
+<% reason = ->(r) { t("funds.reasons.#{r.key}", **r.args) } %>
+
+<main class="app-shell portfolio-page funds-page">
+  <header class="guide-header">
+    <%= link_to t("funds.back"), portfolio_path, class: "back-link" %>
+    <p class="eyebrow"><%= t("app.name") %></p>
+    <h1><%= t("funds.title") %></h1>
+    <p class="subtitle"><%= t("funds.subtitle") %></p>
+    <% if @data.available? %>
+      <p class="portfolio-private" id="funds-data-status">
+        <%= t("funds.data_status", count: number_with_delimiter(@data.count), detailed: number_with_delimiter(@data.detailed_count),
+              list: @data.list_at.to_s[0, 10], status: @data.status_day || t("common.dash"), details: @data.details_at.to_s[0, 10].presence || t("common.dash")) %>
+      </p>
+    <% end %>
+  </header>
+
+  <% unless @data.available? %>
+    <p class="portfolio-status is-empty" id="funds-empty"><%= t("funds.no_data") %></p>
+  <% else %>
+    <% counts = @data.verdict_counts %>
+    <p class="fund-summary">
+      <% FundCheck::VERDICTS.each do |v| %>
+        <span><%= badge.(v) %> <%= number_with_delimiter(counts[v] || 0) %></span>
+      <% end %>
+    </p>
+
+    <section class="panel portfolio-panel" aria-labelledby="fund-search-title">
+      <div class="panel-heading"><h2 id="fund-search-title"><%= t("funds.search.title") %></h2></div>
+      <%= form_with url: funds_path, method: :get, class: "portfolio-form", local: true do |f| %>
+        <label><%= t("funds.search.label") %><%= f.text_field :q, value: @query, placeholder: t("funds.search.placeholder") %></label>
+        <%= f.submit t("funds.search.submit"), class: "button button-primary", name: nil %>
+      <% end %>
+      <div class="fund-indexes">
+        <span><%= t("funds.search.by_index") %></span>
+        <% @data.broad_indexes.each do |code, label, n| %>
+          <%= link_to "#{label}（#{n}）", funds_path(index: code), class: ["fund-index-chip", ("is-active" if @index == code)] %>
+        <% end %>
+      </div>
+    </section>
+
+    <% if @fund %>
+      <% c = @data.check(@fund) %>
+      <section class="panel portfolio-panel fund-card" id="fund-card" aria-labelledby="fund-card-title">
+        <div class="panel-heading">
+          <h2 id="fund-card-title"><%= @fund.name %> <small><%= @fund.code %></small> <%= badge.(c.verdict) %></h2>
+          <p class="portfolio-sub"><%= [@fund.type, @fund.company, @fund.index_name].compact.join(" · ") %></p>
+        </div>
+        <ul class="fund-reasons">
+          <% c.reasons.each do |r| %>
+            <li class="fund-reason-<%= r.verdict %>"><%= reason.(r) %></li>
+          <% end %>
+        </ul>
+        <% if @fund.index_code %>
+          <p class="portfolio-hint"><%= link_to t("funds.same_index", index: @fund.index_name), funds_path(index: @fund.index_code) %></p>
+        <% end %>
+      </section>
+    <% elsif @query.match?(/\A\d{6}\z/) %>
+      <p class="portfolio-status is-empty"><%= t("funds.not_found", code: @query) %></p>
+    <% end %>
+
+    <% if @results.any? %>
+      <section class="panel portfolio-panel" aria-labelledby="fund-results-title">
+        <div class="panel-heading">
+          <h2 id="fund-results-title">
+            <%= @index ? t("funds.results.on_index", index: FundCheck::BROAD[@index] || @index, count: @results.size) : t("funds.results.search", count: @results.size) %>
+          </h2>
+        </div>
+        <div class="table-scroll">
+          <table class="stock-table portfolio-table" id="fund-results">
+            <thead>
+              <tr>
+                <th class="text-left"><%= t("funds.results.code") %></th>
+                <th class="text-left"><%= t("funds.results.name") %></th>
+                <th class="text-left"><%= t("funds.results.verdict") %></th>
+                <th class="text-left"><%= t("funds.results.index") %></th>
+                <th><%= t("funds.results.fee") %></th>
+                <th><%= t("funds.results.size") %></th>
+                <th><%= t("funds.results.since") %></th>
+                <th class="text-left"><%= t("funds.results.buy") %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @results.each do |f| %>
+                <% c = @data.check(f) %>
+                <tr data-code="<%= f.code %>">
+                  <td class="text-left"><%= link_to f.code, funds_path(q: f.code) %></td>
+                  <td class="text-left"><%= f.name %></td>
+                  <td class="text-left"><%= badge.(c.verdict) %></td>
+                  <td class="text-left"><%= f.index_name || f.type %></td>
+                  <td><%= f.total_fee ? "#{f.total_fee.to_s('F')}%" : t("common.dash") %></td>
+                  <td><%= yi.(f) %></td>
+                  <td><%= f.established&.year || t("common.dash") %></td>
+                  <td class="text-left"><%= f.exchange_traded? ? t("funds.exchange") : (f.buy_status || t("common.dash")) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        <p class="portfolio-hint"><%= t("funds.results.hint") %></p>
+      </section>
+    <% elsif @query.present? && !@fund %>
+      <p class="portfolio-status is-empty"><%= t("funds.no_results", query: @query) %></p>
+    <% end %>
+  <% end %>
+
+  <p class="portfolio-hint fund-footer"><%= t("funds.footer") %></p>
+</main>

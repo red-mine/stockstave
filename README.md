@@ -649,6 +649,27 @@ opens the page; `bin\stop-portfolio.ps1` stops it. Point desktop shortcuts at
 `pwsh -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File bin\open-portfolio.ps1`
 (and the same with `stop-portfolio.ps1`).
 
+### Check any public fund
+
+`/funds` (linked from the allocation page) checks every public fund in
+China against what the research found: a broad-market index fund at the
+lowest fee its index allows, at least ¥10 hundred million and three years
+old and open to buy qualifies; sector, enhanced, small, young or restricted
+index funds are cautions; actively managed equity funds are not
+recommended; bond and money funds are described, not judged. Look a fund up
+by code or name, or list every fund on a broad index, best first.
+
+The data is public (Tiantian Fund, eastmoney.com) and fetched by hand into
+`storage/funds/`:
+
+```powershell
+bin/rails funds:refresh   # list, purchase status, then ~7,000 index-fund details; about an hour the first time
+bin/rails funds:status    # list and purchase status only, in seconds
+```
+
+Details fetched within a week are not asked for again, so a rerun resumes
+and a weekly refresh is quick. Tracking error is not checked yet.
+
 ### Tests
 
 Prepare the isolated test database once, then run the suite:

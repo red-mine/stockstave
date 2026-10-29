@@ -770,3 +770,21 @@ a { color: var(--teal-dark); }
 .plan-hindsight ul { margin: 4px 0; padding-left: 18px; }
 .plan-hindsight li.is-gain { color: var(--positive); }
 .plan-hindsight li.is-loss { color: var(--negative); }
+
+/* Fund checkup (/funds, local only) */
+.fund-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.74rem; font-weight: 750; white-space: nowrap; }
+.fund-good { color: var(--positive); background: rgba(20, 125, 100, 0.1); }
+.fund-caution { color: #9a6700; background: rgba(191, 135, 0, 0.12); }
+.fund-avoid { color: var(--negative); background: rgba(181, 71, 71, 0.1); }
+.fund-info { color: var(--muted); background: var(--surface-soft); }
+.fund-summary { display: flex; flex-wrap: wrap; gap: 14px; margin: 18px 0 0; color: var(--muted); font-size: 0.86rem; }
+.fund-indexes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0 26px 18px; color: var(--muted); font-size: 0.8rem; }
+.fund-index-chip { padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--navy); text-decoration: none; }
+.fund-index-chip.is-active, .fund-index-chip:hover { color: white; background: var(--navy); border-color: var(--navy); }
+.fund-card h2 small { color: var(--muted); font-size: 0.9rem; font-weight: 600; }
+.fund-reasons { margin: 0; padding: 16px 26px 16px 46px; line-height: 1.7; }
+.fund-reason-good { color: var(--positive); }
+.fund-reason-caution { color: #9a6700; }
+.fund-reason-avoid { color: var(--negative); }
+.fund-reason-info { color: var(--ink); }
+.fund-footer { margin-top: 22px; padding: 0; }

@@ -8,6 +8,7 @@
     <h1><%= t("portfolio.title") %></h1>
     <p class="subtitle"><%= t("portfolio.subtitle") %></p>
     <p class="portfolio-private"><%= t("portfolio.private_note") %></p>
+    <p><%= link_to t("portfolio.funds_link"), funds_path, class: "guide-link" %></p>
   </header>
 
   <% if notice %><p class="portfolio-flash is-notice" role="status"><%= notice %></p><% end %>
