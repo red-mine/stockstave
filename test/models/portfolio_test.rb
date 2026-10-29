@@ -174,6 +174,83 @@ class PortfolioTest < ActiveSupport::TestCase
     assert_nil h.institution
   end
 
+  class FakeFetcher
+    attr_reader :asked
+
+    def initialize(events: {}, failures: {})
+      @events, @failures = events, failures
+    end
+
+    def call(codes, deadline: nil)
+      @asked = codes
+      Stock::CorporateActionFetcher::Result.new(events: @events.slice(*codes), failures: @failures.slice(*codes))
+    end
+  end
+
+  def add_plan(p, **overrides)
+    p.add_plan(**{ name: "CSI 300", fund_code: "110020", proxy: "510310", amount: "2,800", day: "10",
+                   start_on: "2026-01-10", months: "12" }.merge(overrides))
+  end
+
+  test "plans are saved with the ETF code made explicit" do
+    p = portfolio
+    add_plan(p)
+
+    plan = Portfolio.load(@path).plans.first
+    assert_equal "sh510310", plan.proxy
+    assert_equal BigDecimal("2800"), plan.amount
+    assert_equal 10, plan.day
+    assert_equal Date.new(2026, 1, 10), plan.start_on
+    assert_equal 12, plan.months
+  end
+
+  test "bad plans are refused" do
+    p = portfolio
+
+    assert_raises(Portfolio::Invalid) { add_plan(p, proxy: "110020") }
+    assert_raises(Portfolio::Invalid) { add_plan(p, amount: "0") }
+    assert_raises(Portfolio::Invalid) { add_plan(p, day: "31") }
+    assert_raises(Portfolio::Invalid) { add_plan(p, start_on: "soon") }
+    assert_raises(Portfolio::Invalid) { add_plan(p, months: "0") }
+    assert_raises(Portfolio::Invalid) { p.remove_plan("missing") }
+    assert_empty p.plans
+  end
+
+  test "the deposit rate to compare against is kept" do
+    p = portfolio
+    assert_equal BigDecimal("1.5"), p.compare_rate
+
+    p.update_compare_rate("2.1")
+    assert_equal BigDecimal("2.1"), Portfolio.load(@path).compare_rate
+    assert_raises(Portfolio::Invalid) { p.update_compare_rate("x") }
+    assert_raises(Portfolio::Invalid) { p.update_compare_rate("25") }
+  end
+
+  test "dividend records are fetched for the plans' ETFs and cached beside the file" do
+    p = portfolio
+    add_plan(p)
+    dividend = { date: Date.new(2026, 1, 20), category: 1, cash: 0.75, bonus: 0.0, rights: 0.0, rights_price: 0.0, resize: 0.0 }
+    fetcher = FakeFetcher.new(events: { "sh510310" => [dividend] })
+
+    assert_empty p.refresh_fund_events(fetcher: fetcher)
+    assert_equal ["sh510310"], fetcher.asked
+    assert File.file?(File.join(@dir, "fund_events.json"))
+    assert_equal [dividend], Portfolio.load(@path).fund_events["sh510310"]
+    assert Portfolio.load(@path).fund_events_fetched_at
+  end
+
+  test "a failed fetch keeps the records already cached" do
+    p = portfolio
+    add_plan(p)
+    dividend = { date: Date.new(2026, 1, 20), category: 1, cash: 0.75, bonus: 0.0, rights: 0.0, rights_price: 0.0, resize: 0.0 }
+    p.refresh_fund_events(fetcher: FakeFetcher.new(events: { "sh510310" => [dividend] }))
+
+    failed = p.refresh_fund_events(fetcher: FakeFetcher.new(failures: { "sh510310" => "timeout" }))
+
+    assert_equal ["sh510310"], failed
+    assert_equal [dividend], p.fund_events["sh510310"]
+  end
+
   test "saving replaces the file whole and leaves no temporary files" do
     portfolio(cash: 1)
 

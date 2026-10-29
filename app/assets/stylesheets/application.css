@@ -759,3 +759,10 @@ a { color: var(--teal-dark); }
   .portfolio-hint, .portfolio-split { padding-left: 16px; padding-right: 16px; }
 }
 .portfolio-table tr.is-due td { background: rgba(181, 71, 71, 0.06); }
+.portfolio-table td.is-gain { color: var(--positive); }
+.portfolio-table td.is-loss { color: var(--negative); }
+.portfolio-sub { display: block; margin-top: 3px; color: var(--muted); font-size: 0.74rem; font-weight: 500; }
+.portfolio-table tr.plan-detail td { padding-top: 0; color: var(--muted); font-size: 0.8rem; white-space: normal; }
+.portfolio-table details summary { cursor: pointer; margin: 6px 0; color: var(--teal-dark); }
+.portfolio-inline { display: flex; align-items: flex-end; gap: 8px; margin: 0; }
+.portfolio-hint-top { padding-top: 18px; }

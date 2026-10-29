@@ -126,6 +126,100 @@
     <p class="portfolio-hint"><%= t("portfolio.mix.hint") %></p>
   </section>
 
+  <section class="panel portfolio-panel" aria-labelledby="plans-title">
+    <div class="panel-heading"><h2 id="plans-title"><%= t("portfolio.plans.title") %></h2></div>
+    <% if @tracked.any? %>
+      <div class="table-scroll">
+        <table class="stock-table portfolio-table" id="plans-table">
+          <thead>
+            <tr>
+              <th class="text-left"><%= t("portfolio.plans.name") %></th>
+              <th><%= t("portfolio.plans.progress") %></th>
+              <th><%= t("portfolio.plans.invested") %></th>
+              <th><%= t("portfolio.plans.value") %></th>
+              <th><%= t("portfolio.plans.profit") %></th>
+              <th><%= t("portfolio.plans.deposit", rate: @portfolio.compare_rate.to_s("F")) %></th>
+              <th><%= t("portfolio.plans.versus") %></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @tracked.each do |plan, r| %>
+              <tr id="plan-<%= plan.id %>">
+                <td class="text-left">
+                  <strong><%= plan.name %></strong>
+                  <small class="portfolio-sub"><%= t("portfolio.plans.schedule", code: plan.fund_code || t("common.dash"), proxy: plan.proxy.upcase, amount: money.(plan.amount), day: plan.day) %></small>
+                </td>
+                <td><%= "#{r.purchases.size} / #{plan.months}" %></td>
+                <td><%= money.(r.invested) %></td>
+                <td><%= r.priced ? money.(r.value) : t("common.dash") %></td>
+                <td class="<%= r.profit.negative? ? 'is-loss' : 'is-gain' %>"><%= r.priced ? "#{r.profit.negative? ? '−' : '+'}#{money.(r.profit.abs)} (#{format('%+.1f%%', r.return_pct)})" : t("common.dash") %></td>
+                <td><%= money.(r.deposit_value) %></td>
+                <td class="<%= r.versus_deposit.negative? ? 'is-loss' : 'is-gain' %>"><%= r.priced ? "#{r.versus_deposit.negative? ? '−' : '+'}#{money.(r.versus_deposit.abs)}" : t("common.dash") %></td>
+                <td class="portfolio-actions">
+                  <%= button_to t("portfolio.holdings.remove"), portfolio_plan_path(plan.id), method: :delete, class: "button button-secondary", form: { data: { turbo_confirm: t("portfolio.holdings.confirm_remove", name: plan.name) } } %>
+                </td>
+              </tr>
+              <tr class="plan-detail">
+                <td colspan="8" class="text-left">
+                  <% if !r.priced %>
+                    <%= t("portfolio.plans.no_prices", proxy: plan.proxy.upcase) %>
+                  <% else %>
+                    <%= t("portfolio.plans.as_of", date: r.as_of.iso8601) %>
+                    <% if r.done %><%= t("portfolio.plans.done") %><% elsif r.next_date %><%= t("portfolio.plans.next", date: r.next_date.iso8601) %><% end %>
+                    <% unless r.adjusted %><%= t("portfolio.plans.no_dividends") %><% end %>
+                    <% if r.purchases.any? %>
+                      <details>
+                        <summary><%= t("portfolio.plans.each") %></summary>
+                        <table class="stock-table portfolio-table">
+                          <thead><tr><th class="text-left"><%= t("portfolio.plans.date") %></th><th><%= t("portfolio.plans.invested") %></th><th><%= t("portfolio.plans.value") %></th><th><%= t("portfolio.plans.profit") %></th></tr></thead>
+                          <tbody>
+                            <% last = r.purchases.sum(BigDecimal("0"), &:units).zero? ? 0 : r.value / r.purchases.sum(BigDecimal("0"), &:units) %>
+                            <% r.purchases.each do |p| %>
+                              <% now = (p.units * last).round(2) %>
+                              <tr>
+                                <td class="text-left"><%= p.date.iso8601 %></td>
+                                <td><%= money.(p.amount) %></td>
+                                <td><%= money.(now) %></td>
+                                <td class="<%= (now - p.amount).negative? ? 'is-loss' : 'is-gain' %>"><%= format("%+.1f%%", ((now - p.amount) / p.amount * 100).to_f) %></td>
+                              </tr>
+                            <% end %>
+                          </tbody>
+                        </table>
+                      </details>
+                    <% end %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="portfolio-hint portfolio-hint-top"><%= t("portfolio.plans.empty") %></p>
+    <% end %>
+    <%= form_with url: portfolio_plans_path, scope: :plan, class: "portfolio-form", local: true, id: "new-plan" do |f| %>
+      <label><%= t("portfolio.plans.name") %><%= f.text_field :name, required: true, placeholder: t("portfolio.plans.name_example") %></label>
+      <label><%= t("portfolio.plans.fund_code") %><%= f.text_field :fund_code, size: 8, placeholder: "110020" %></label>
+      <label><%= t("portfolio.plans.proxy") %><%= f.text_field :proxy, required: true, size: 8, placeholder: "510310" %></label>
+      <label><%= t("portfolio.plans.amount") %><%= f.text_field :amount, required: true, inputmode: "decimal", size: 8, placeholder: "2800" %></label>
+      <label><%= t("portfolio.plans.day") %><%= f.number_field :day, required: true, min: 1, max: 28, value: 10 %></label>
+      <label><%= t("portfolio.plans.start_on") %><%= f.date_field :start_on, required: true, value: @today %></label>
+      <label><%= t("portfolio.plans.months") %><%= f.number_field :months, required: true, min: 1, max: 600, value: 12 %></label>
+      <%= f.submit t("portfolio.plans.add"), class: "button button-primary" %>
+    <% end %>
+    <div class="portfolio-form">
+      <%= form_with url: portfolio_compare_rate_path, method: :patch, local: true, class: "portfolio-inline" do |f| %>
+        <label><%= t("portfolio.plans.compare_rate") %><%= f.text_field :compare_rate, value: @portfolio.compare_rate.to_s("F"), size: 4, inputmode: "decimal" %></label>
+        <%= f.submit t("portfolio.settings.save"), class: "button button-secondary", name: nil %>
+      <% end %>
+      <% if @portfolio.plans.any? %>
+        <%= button_to t("portfolio.plans.refresh"), portfolio_fund_events_path, class: "button button-secondary" %>
+      <% end %>
+    </div>
+    <p class="portfolio-hint"><%= t("portfolio.plans.hint") %></p>
+  </section>
+
   <section class="panel portfolio-panel" aria-labelledby="split-title">
     <div class="panel-heading"><h2 id="split-title"><%= t("portfolio.split.title") %></h2></div>
     <%= form_with url: portfolio_path, method: :get, class: "portfolio-form", local: true do |f| %>

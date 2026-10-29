@@ -9,6 +9,7 @@ class PortfoliosController < ApplicationController
   def show
     @today = Date.current
     @rows = @portfolio.rows
+    @tracked = @portfolio.tracked_plans(@today)
     @new_money = params[:new_money].to_s.delete(",").strip.presence
     return unless @new_money
 
@@ -51,6 +52,44 @@ class PortfoliosController < ApplicationController
   def record_rebalance
     @portfolio.record_rebalance
     redirect_to portfolio_path, notice: t("portfolio.notices.rebalanced")
+  end
+
+  def create_plan
+    p = params.require(:plan)
+    @portfolio.add_plan(name: p[:name], fund_code: p[:fund_code], proxy: p[:proxy], amount: p[:amount],
+                        day: p[:day], start_on: p[:start_on], months: p[:months])
+    # A new ETF has no dividend records yet; fetch them now so the first
+    # valuation already counts them. A failure only leaves them uncounted.
+    failed = @portfolio.refresh_fund_events
+    notice = failed.empty? ? t("portfolio.notices.plan_added") : t("portfolio.notices.plan_added_no_events")
+    redirect_to portfolio_path(anchor: "plans-title"), notice: notice
+  rescue Portfolio::Invalid, ActionController::ParameterMissing => e
+    redirect_to portfolio_path(anchor: "plans-title"), alert: error_message(e)
+  end
+
+  def destroy_plan
+    @portfolio.remove_plan(params[:id].to_s)
+    redirect_to portfolio_path(anchor: "plans-title"), notice: t("portfolio.notices.plan_removed")
+  rescue Portfolio::Invalid => e
+    redirect_to portfolio_path(anchor: "plans-title"), alert: error_message(e)
+  end
+
+  def update_compare_rate
+    @portfolio.update_compare_rate(params[:compare_rate])
+    redirect_to portfolio_path(anchor: "plans-title"), notice: t("portfolio.notices.settings_saved")
+  rescue Portfolio::Invalid => e
+    redirect_to portfolio_path(anchor: "plans-title"), alert: error_message(e)
+  end
+
+  def refresh_fund_events
+    failed = @portfolio.refresh_fund_events
+    if failed.empty?
+      redirect_to portfolio_path(anchor: "plans-title"), notice: t("portfolio.notices.events_refreshed")
+    else
+      redirect_to portfolio_path(anchor: "plans-title"), alert: t("portfolio.errors.events", codes: failed.join(", "))
+    end
+  rescue ::Stock::CorporateActionFetcher::NoServerAvailable
+    redirect_to portfolio_path(anchor: "plans-title"), alert: t("portfolio.errors.events", codes: @portfolio.plans.map(&:proxy).uniq.join(", "))
   end
 
   private

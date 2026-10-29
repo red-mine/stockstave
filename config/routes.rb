@@ -11,6 +11,10 @@ Rails.application.routes.draw do
     patch "/portfolio/holdings/:id", to: "portfolios#update_holding", as: :portfolio_holding
     delete "/portfolio/holdings/:id", to: "portfolios#destroy_holding"
     post "/portfolio/rebalanced", to: "portfolios#record_rebalance", as: :portfolio_rebalanced
+    post "/portfolio/plans", to: "portfolios#create_plan", as: :portfolio_plans
+    delete "/portfolio/plans/:id", to: "portfolios#destroy_plan", as: :portfolio_plan
+    patch "/portfolio/compare_rate", to: "portfolios#update_compare_rate", as: :portfolio_compare_rate
+    post "/portfolio/fund_events", to: "portfolios#refresh_fund_events", as: :portfolio_fund_events
   end
 
   get "/locale/:locale", to: "locale#show", as: :locale,
