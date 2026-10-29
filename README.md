@@ -644,9 +644,10 @@ auto-investments are the exception: a plan names the ETF the fund invests in
 (510310 for 110020), and the page values it on that ETF's adjusted closes and
 compares it with the same money in a deposit.
 
-`bin\open-portfolio.ps1` starts the server when it is not running and opens
-the page; point a desktop shortcut at
-`pwsh -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File bin\open-portfolio.ps1`.
+`bin\open-portfolio.ps1` starts the server hidden when it is not running and
+opens the page; `bin\stop-portfolio.ps1` stops it. Point desktop shortcuts at
+`pwsh -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File bin\open-portfolio.ps1`
+(and the same with `stop-portfolio.ps1`).
 
 ### Tests
 

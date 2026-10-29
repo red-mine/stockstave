@@ -3,7 +3,8 @@
 #
 #   pwsh -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File bin\open-portfolio.ps1
 #
-# The server runs in its own minimized window; closing that window stops it.
+# The server runs hidden; bin\stop-portfolio.ps1 stops it. Its log is
+# log\development.log.
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
@@ -27,7 +28,7 @@ if (-not (Test-Server)) {
     $ruby = (Get-Command ruby -ErrorAction SilentlyContinue)?.Source
     if (-not $ruby) { $ruby = "C:\Ruby34-x64\bin\ruby.exe" }
     Start-Process -FilePath $ruby -ArgumentList "bin/rails", "server", "-p", "$port" `
-        -WorkingDirectory $root -WindowStyle Minimized
+        -WorkingDirectory $root -WindowStyle Hidden
 
     $ready = $false
     for ($i = 0; $i -lt 60 -and -not $ready; $i++) {
