@@ -87,7 +87,9 @@ signals lack.
   out-of-sample test in a day or two: TongdaXin data, ex-rights adjustment,
   vectorised replay, event study and walk-forward
   ([research/event_study/](research/event_study/README.md)).
-- The web app, which still draws the stave and channel charts per stock.
+- The web app, which still draws the stave and channel charts per stock, and
+  a local "My allocation" page that keeps a fixed cash/bond/stock mix
+  ([docs/allocation.md](docs/allocation.md) is why).
 
 ## Documents
 
@@ -619,6 +621,25 @@ every 30 minutes before restarting that service. Inspect the current URL with
 ```sh
 journalctl --user -u stave-public-preview.service -u stave-public-preview-monitor.service
 ```
+
+### Track your own allocation
+
+`/portfolio` (linked as "My allocation" on the market page) records what you
+hold in cash, bond and stock funds, compares the mix with your targets, says
+what to buy or sell when a bucket drifts past the band or the yearly
+rebalance falls due, and splits new money toward the buckets that are short.
+
+The figures are private, so they are kept apart from everything the app
+publishes:
+
+- They are saved to `storage/portfolio.json` (git-ignored; set
+  `STOCK_PORTFOLIO_PATH` to use another file), never to the stock database,
+  which the refresh mirrors into the public preview every night.
+- The routes are not mounted in production, which is what the public preview
+  runs, and the controller refuses production requests as well.
+
+Amounts are entered by hand, as your fund app shows them: off-exchange funds
+such as Yu'e Bao have no TongdaXin prices to value them from.
 
 ### Tests
 

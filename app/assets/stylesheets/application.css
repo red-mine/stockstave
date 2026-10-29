@@ -730,3 +730,31 @@ a { color: var(--teal-dark); }
 .fundamentals-check-met { color: var(--positive); background: rgba(20, 125, 100, 0.12); }
 .fundamentals-check-missed { color: var(--negative); background: rgba(181, 71, 71, 0.12); }
 .fundamentals-check-unknown { color: var(--muted); background: #edf1f4; }
+
+/* My allocation (/portfolio, local only) */
+.portfolio-page .panel { margin-top: 22px; background: var(--surface); box-shadow: var(--shadow); }
+.portfolio-private { margin: 8px 0 0; color: var(--muted); font-size: 0.8rem; }
+.portfolio-flash, .portfolio-status { margin: 18px 0 0; padding: 12px 16px; border-radius: 12px; font-size: 0.9rem; }
+.portfolio-flash.is-notice, .portfolio-status.is-ok { color: var(--positive); background: rgba(20, 125, 100, 0.08); }
+.portfolio-flash.is-alert, .portfolio-status.is-action { color: var(--negative); background: rgba(181, 71, 71, 0.08); }
+.portfolio-status.is-stale, .portfolio-status.is-empty { color: var(--navy); background: var(--surface-soft); }
+.portfolio-table td.is-off { color: var(--negative); font-weight: 750; }
+.portfolio-table .trade .buy { color: var(--positive); font-weight: 750; }
+.portfolio-table .trade .sell { color: var(--negative); font-weight: 750; }
+.portfolio-table input, .portfolio-table select, .portfolio-form input, .portfolio-form select {
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 0.86rem; background: white;
+}
+.portfolio-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.portfolio-actions form { margin: 0; }
+.portfolio-actions .button { min-height: 34px; padding: 6px 12px; }
+.portfolio-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; padding: 18px 26px; }
+.portfolio-form label { display: grid; gap: 6px; color: var(--muted); font-size: 0.78rem; font-weight: 700; }
+.portfolio-split { display: flex; flex-wrap: wrap; gap: 12px; margin: 0; padding: 0 26px 6px; list-style: none; }
+.portfolio-split li { display: grid; gap: 4px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 12px; }
+.portfolio-split span { color: var(--muted); font-size: 0.78rem; }
+.portfolio-hint { margin: 0; padding: 0 26px 18px; color: var(--muted); font-size: 0.8rem; }
+.portfolio-table .text-left { text-align: left; }
+@media (max-width: 640px) {
+  .portfolio-form { padding: 16px; }
+  .portfolio-hint, .portfolio-split { padding-left: 16px; padding-right: 16px; }
+}

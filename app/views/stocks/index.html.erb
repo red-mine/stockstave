@@ -64,6 +64,8 @@
             <span class="refresh-schedule"><%= t("home.status.schedule") %><strong><%= @refresh_schedule[:time] %></strong></span>
           <% end %>
           <%= link_to t("home.history_link"), signal_history_path(area: @area), class: "history-shortcut" %>
+          <%# Local only: the portfolio routes are not mounted in production. %>
+          <%= link_to t("portfolio.link"), portfolio_path, class: "history-shortcut portfolio-shortcut" if respond_to?(:portfolio_path) %>
         </div>
       </div>
       <% if @buy_candidates.any? %>

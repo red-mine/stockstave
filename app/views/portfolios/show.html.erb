@@ -1,0 +1,164 @@
+<% money = ->(v) { "¥#{number_with_delimiter(v.round(0).to_i)}" } %>
+<% pct = ->(v) { number_to_percentage(v, precision: 1) } %>
+
+<main class="app-shell portfolio-page">
+  <header class="guide-header">
+    <%= link_to t("portfolio.back"), root_path, class: "back-link" %>
+    <p class="eyebrow"><%= t("app.name") %></p>
+    <h1><%= t("portfolio.title") %></h1>
+    <p class="subtitle"><%= t("portfolio.subtitle") %></p>
+    <p class="portfolio-private"><%= t("portfolio.private_note") %></p>
+  </header>
+
+  <% if notice %><p class="portfolio-flash is-notice" role="status"><%= notice %></p><% end %>
+  <% if alert %><p class="portfolio-flash is-alert" role="alert"><%= alert %></p><% end %>
+
+  <% if @portfolio.empty? %>
+    <p class="portfolio-status is-empty"><%= t("portfolio.status.empty") %></p>
+  <% elsif @portfolio.needs_rebalance?(@today) %>
+    <p class="portfolio-status is-action" id="rebalance-status">
+      <strong><%= t("portfolio.status.action") %></strong>
+      <% if @portfolio.drifted? %><%= t("portfolio.status.drifted", band: @portfolio.band) %><% end %>
+      <% if @portfolio.overdue?(@today) %><%= t("portfolio.status.overdue", date: @portfolio.due_on.iso8601) %><% end %>
+    </p>
+  <% else %>
+    <p class="portfolio-status is-ok" id="rebalance-status">
+      <strong><%= t("portfolio.status.ok") %></strong>
+      <%= t("portfolio.status.within", band: @portfolio.band) %>
+      <% if @portfolio.due_on %><%= t("portfolio.status.next", date: @portfolio.due_on.iso8601) %><% end %>
+    </p>
+  <% end %>
+
+  <% stale = @portfolio.stale_holdings(@today) %>
+  <% if stale.any? %>
+    <p class="portfolio-status is-stale"><%= t("portfolio.status.stale", days: Portfolio::STALE_DAYS, names: stale.map(&:name).join(I18n.locale == :zh ? "、" : ", ")) %></p>
+  <% end %>
+
+  <section class="panel portfolio-panel" aria-labelledby="mix-title">
+    <div class="panel-heading"><h2 id="mix-title"><%= t("portfolio.mix.title") %></h2></div>
+    <div class="table-scroll">
+      <table class="stock-table portfolio-table" id="mix-table">
+        <thead>
+          <tr>
+            <th class="text-left"><%= t("portfolio.mix.bucket") %></th>
+            <th><%= t("portfolio.mix.amount") %></th>
+            <th><%= t("portfolio.mix.actual") %></th>
+            <th><%= t("portfolio.mix.target") %></th>
+            <th><%= t("portfolio.mix.gap") %></th>
+            <th><%= t("portfolio.mix.trade") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% act = @portfolio.needs_rebalance?(@today) %>
+          <% @rows.each do |row| %>
+            <tr data-bucket="<%= row.bucket %>">
+              <td class="text-left"><strong><%= t("portfolio.buckets.#{row.bucket}") %></strong></td>
+              <td><%= money.(row.amount) %></td>
+              <td><%= pct.(row.actual) %></td>
+              <td><%= pct.(row.target) %></td>
+              <td class="<%= row.gap.abs > @portfolio.band ? 'is-off' : '' %>"><%= format("%+.1f", row.gap) %></td>
+              <td class="trade">
+                <% if !act || row.trade.zero? %>
+                  <%= t("common.dash") %>
+                <% elsif row.trade.positive? %>
+                  <span class="buy"><%= t("portfolio.mix.buy", amount: money.(row.trade)) %></span>
+                <% else %>
+                  <span class="sell"><%= t("portfolio.mix.sell", amount: money.(-row.trade)) %></span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot>
+          <tr><td class="text-left"><strong><%= t("portfolio.mix.total") %></strong></td><td><strong><%= money.(@portfolio.total) %></strong></td><td colspan="4"></td></tr>
+        </tfoot>
+      </table>
+    </div>
+    <p class="portfolio-hint"><%= t("portfolio.mix.hint") %></p>
+  </section>
+
+  <section class="panel portfolio-panel" aria-labelledby="split-title">
+    <div class="panel-heading"><h2 id="split-title"><%= t("portfolio.split.title") %></h2></div>
+    <%= form_with url: portfolio_path, method: :get, class: "portfolio-form", local: true do |f| %>
+      <label><%= t("portfolio.split.label") %>
+        <%= f.text_field :new_money, value: @new_money, inputmode: "decimal", placeholder: "1000" %>
+      </label>
+      <%= f.submit t("portfolio.split.submit"), class: "button button-primary", name: nil %>
+    <% end %>
+    <% if @split %>
+      <ul class="portfolio-split" id="split-result">
+        <% Portfolio::BUCKETS.each do |b| %>
+          <li><span><%= t("portfolio.buckets.#{b}") %></span><strong><%= money.(@split[b]) %></strong></li>
+        <% end %>
+      </ul>
+      <p class="portfolio-hint"><%= t("portfolio.split.hint") %></p>
+    <% end %>
+  </section>
+
+  <section class="panel portfolio-panel" aria-labelledby="holdings-title">
+    <div class="panel-heading"><h2 id="holdings-title"><%= t("portfolio.holdings.title") %></h2></div>
+    <div class="table-scroll">
+      <table class="stock-table portfolio-table" id="holdings-table">
+        <thead>
+          <tr>
+            <th class="text-left"><%= t("portfolio.holdings.name") %></th>
+            <th class="text-left"><%= t("portfolio.holdings.code") %></th>
+            <th class="text-left"><%= t("portfolio.holdings.bucket") %></th>
+            <th><%= t("portfolio.holdings.amount") %></th>
+            <th><%= t("portfolio.holdings.updated") %></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @portfolio.holdings.each do |h| %>
+            <tr id="holding-<%= h.id %>">
+              <td class="text-left"><%= text_field_tag "holding[name]", h.name, form: "holding-form-#{h.id}", required: true, "aria-label": t("portfolio.holdings.name") %></td>
+              <td class="text-left"><%= text_field_tag "holding[code]", h.code, form: "holding-form-#{h.id}", size: 8, "aria-label": t("portfolio.holdings.code") %></td>
+              <td class="text-left"><%= select_tag "holding[bucket]", options_for_select(Portfolio::BUCKETS.map { |b| [t("portfolio.buckets.#{b}"), b] }, h.bucket), form: "holding-form-#{h.id}", "aria-label": t("portfolio.holdings.bucket") %></td>
+              <td><%= text_field_tag "holding[amount]", h.amount.to_s("F"), form: "holding-form-#{h.id}", inputmode: "decimal", size: 10, "aria-label": t("portfolio.holdings.amount") %></td>
+              <td class="<%= stale.include?(h) ? 'is-off' : '' %>"><%= h.updated_on ? h.updated_on.iso8601 : t("common.dash") %></td>
+              <td class="portfolio-actions">
+                <%= submit_tag t("portfolio.holdings.save"), form: "holding-form-#{h.id}", class: "button button-secondary", name: nil %>
+                <%= button_to t("portfolio.holdings.remove"), portfolio_holding_path(h.id), method: :delete, class: "button button-secondary", form: { data: { turbo_confirm: t("portfolio.holdings.confirm_remove", name: h.name) } } %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <%# Row forms live outside the table (a form cannot sit in a <tr>); the
+        row's fields join them through their form attribute. %>
+    <% @portfolio.holdings.each do |h| %>
+      <%= form_with url: portfolio_holding_path(h.id), method: :patch, local: true, id: "holding-form-#{h.id}" do %><% end %>
+    <% end %>
+    <%= form_with url: portfolio_holdings_path, scope: :holding, class: "portfolio-form", local: true, id: "new-holding" do |f| %>
+      <label><%= t("portfolio.holdings.name") %><%= f.text_field :name, required: true, placeholder: t("portfolio.holdings.name_example") %></label>
+      <label><%= t("portfolio.holdings.code") %><%= f.text_field :code, size: 8, placeholder: "511360" %></label>
+      <label><%= t("portfolio.holdings.bucket") %><%= f.select :bucket, Portfolio::BUCKETS.map { |b| [t("portfolio.buckets.#{b}"), b] } %></label>
+      <label><%= t("portfolio.holdings.amount") %><%= f.text_field :amount, required: true, inputmode: "decimal", placeholder: "10000" %></label>
+      <%= f.submit t("portfolio.holdings.add"), class: "button button-primary" %>
+    <% end %>
+    <p class="portfolio-hint"><%= t("portfolio.holdings.hint") %></p>
+  </section>
+
+  <section class="panel portfolio-panel" aria-labelledby="settings-title">
+    <div class="panel-heading"><h2 id="settings-title"><%= t("portfolio.settings.title") %></h2></div>
+    <%= form_with url: portfolio_settings_path, method: :patch, scope: :settings, class: "portfolio-form", local: true, id: "settings-form" do |f| %>
+      <% Portfolio::BUCKETS.each do |b| %>
+        <label><%= t("portfolio.settings.target", bucket: t("portfolio.buckets.#{b}")) %>
+          <%= number_field_tag "settings[targets][#{b}]", @portfolio.targets[b], min: 0, max: 100, step: 1 %>
+        </label>
+      <% end %>
+      <label><%= t("portfolio.settings.band") %><%= f.number_field :band, value: @portfolio.band, min: 1, max: 50, step: 1 %></label>
+      <label><%= t("portfolio.settings.interval") %><%= f.number_field :interval, value: @portfolio.interval, min: 1, max: 60, step: 1 %></label>
+      <%= f.submit t("portfolio.settings.save"), class: "button button-primary" %>
+    <% end %>
+    <div class="portfolio-form">
+      <p class="portfolio-hint">
+        <%= @portfolio.last_rebalanced_on ? t("portfolio.settings.last", date: @portfolio.last_rebalanced_on.iso8601) : t("portfolio.settings.never") %>
+      </p>
+      <%= button_to t("portfolio.settings.record"), portfolio_rebalanced_path, class: "button button-secondary" %>
+    </div>
+    <p class="portfolio-hint"><%= t("portfolio.settings.hint") %></p>
+  </section>
+</main>
