@@ -39,6 +39,23 @@ PORTFOLIOS = {
 }
 
 
+def diversified(stock):
+    """`stock` in CSI 300 / CSI 500 / S&P 500 at 2:1:1, the rest in treasuries."""
+    return {"hs300": stock / 2, "zz500": stock / 4, "sp500": stock / 4, "bond": 1 - stock}
+
+
+# Money needed within a few years: judged by the worst holding period, not
+# by the long-run average (docs/allocation.md, 期限短、怕亏损的情况).
+SHORT_TERM = {
+    "全仓货币": {"cash": 1.0},
+    "全仓国债": {"bond": 1.0},
+    "股10债90（分散）": diversified(0.1),
+    "股20债80（分散）": diversified(0.2),
+    "股30债70（分散）": diversified(0.3),
+    "股60债40（分散）": diversified(0.6),
+}
+
+
 def connect():
     for _, ip, port in hq_hosts:
         api = TdxHq_API(raise_exception=False)
@@ -155,14 +172,28 @@ def report(px, title, cost, monthly=True):
         print(f"{name:<24}投入 {paid:>9,.0f}  期末 {v.iloc[-1]:>9,.0f}  年化 {r:+.1%}")
 
 
+def report_horizon(px, years, cost):
+    """Every start day's return over `years` years of holding, per mix."""
+    span = int(years * 244)
+    print(f"\n== 任意持有 {years} 年（ETF，{px.index[0]} .. {px.index[-1]}）==")
+    print(f"{'组合':<20}{'最大回撤':>9}{'最差':>9}{'中位数':>9}{'亏钱概率':>9}")
+    for name, w in SHORT_TERM.items():
+        v, _ = simulate(px, w, cost)
+        r = (v.shift(-span) / v - 1).dropna()
+        mdd = (v / v.cummax() - 1).min()
+        print(f"{name:<18}{mdd:>10.1%}{r.min():>+9.1%}{r.median():>+9.1%}{(r < 0).mean():>9.0%}")
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("vipdoc")
     p.add_argument("--cost", type=float, default=0.0005)
+    p.add_argument("--horizon", type=float, default=3, help="holding period in years for the short-term table")
     a = p.parse_args()
 
     etf = etf_prices(a.vipdoc).dropna()
     report(etf, "ETF（可直接买到，费用已扣）", a.cost)
+    report_horizon(etf, a.horizon, a.cost)
     idx = index_prices(a.vipdoc).dropna()
     report(idx[idx.index >= 20050104], "指数（沪深300不含分红，低估约2%/年）", a.cost, monthly=False)
 

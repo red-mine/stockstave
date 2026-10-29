@@ -99,4 +99,7 @@
 ```bash
 cd research/allocation
 python backtest.py ../../vipdoc          # 需要 pytdx 拉除权记录，约 1 分钟
+python backtest.py ../../vipdoc --horizon 5   # "任意持有 N 年"表换成 5 年
 ```
+
+脚本会依次输出一次性投入、每月定投、任意持有 3 年和 2005 年起的指数四张表。"近 1 年实际收益"那张表是 2026-10-28 的快照，不由脚本生成。在 Windows 终端运行前先设 `PYTHONIOENCODING=utf-8`，否则中文会乱码。
