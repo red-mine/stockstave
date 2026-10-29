@@ -639,7 +639,14 @@ publishes:
   runs, and the controller refuses production requests as well.
 
 Amounts are entered by hand, as your fund app shows them: off-exchange funds
-such as Yu'e Bao have no TongdaXin prices to value them from.
+such as Yu'e Bao have no TongdaXin prices to value them from. Monthly
+auto-investments are the exception: a plan names the ETF the fund invests in
+(510310 for 110020), and the page values it on that ETF's adjusted closes and
+compares it with the same money in a deposit.
+
+`bin\open-portfolio.ps1` starts the server when it is not running and opens
+the page; point a desktop shortcut at
+`pwsh -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File bin\open-portfolio.ps1`.
 
 ### Tests
 
