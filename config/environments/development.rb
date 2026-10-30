@@ -68,6 +68,12 @@ Rails.application.configure do
   # Suppress logger output for asset requests.
   config.assets.quiet = true
 
+  # The public preview precompiles into public/assets, and Sprockets prefers
+  # a precompiled file it finds there over the live sources: every style
+  # written after that precompile silently went missing in development.
+  # A separate prefix keeps development on the sources.
+  config.assets.prefix = "/dev-assets"
+
   # Let parallel development processes use separate Sprockets caches. Windows
   # cannot atomically replace a cache file while another process has it open.
   if ENV["ASSET_CACHE_PATH"].present?
