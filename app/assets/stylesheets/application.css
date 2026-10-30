@@ -741,7 +741,9 @@ a { color: var(--teal-dark); }
 .portfolio-table td.is-off { color: var(--negative); font-weight: 750; }
 .portfolio-table .trade .buy { color: var(--positive); font-weight: 750; }
 .portfolio-table .trade .sell { color: var(--negative); font-weight: 750; }
-.portfolio-table input, .portfolio-table select, .portfolio-form input, .portfolio-form select {
+/* text fields only: a submit button is an <input> too, and white on white hid it */
+.portfolio-table input:not([type="submit"]), .portfolio-table select,
+.portfolio-form input:not([type="submit"]), .portfolio-form select {
   padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 0.86rem; background: white;
 }
 .portfolio-actions { display: flex; gap: 6px; justify-content: flex-end; }
