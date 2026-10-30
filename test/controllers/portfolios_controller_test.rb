@@ -8,8 +8,10 @@ class PortfoliosControllerTest < ActionDispatch::IntegrationTest
 
   teardown { FileUtils.remove_entry(@dir) }
 
+  # Fund checkup data comes from an empty directory, never the real
+  # storage/funds, so the checklist is the same on every machine.
   def with_portfolio_file(&block)
-    Portfolio.stub(:default_path, @path, &block)
+    FundFetcher.stub(:directory, @dir) { Portfolio.stub(:default_path, @path, &block) }
   end
 
   test "an empty portfolio asks for holdings" do
@@ -19,6 +21,19 @@ class PortfoliosControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: "My allocation"
     assert_select ".portfolio-status.is-empty"
     assert_select "aside.research-banner", 0
+    assert_select "#checklist-quiet", text: /Nothing to do this month/
+  end
+
+  test "the checklist leads with an upcoming auto-investment debit" do
+    with_etf_prices do
+      post portfolio_plans_path, params: { plan: { name: "CSI 300", fund_code: "110020", proxy: "510310", amount: "4200",
+                                                   day: "10", start_on: (Date.current + 5).iso8601, months: "12" } }
+      follow_redirect!
+    end
+
+    assert_select "#checklist li.checklist-action[data-key=debit]", text: /CSI 300: ¥4,200 is debited on/
+    assert_select "#checklist li.checklist-action[data-key=keep_cash]", text: /¥4,200/
+    assert_select "#checklist-quiet", 0
   end
 
   test "added holdings show the mix and the trades back to target" do

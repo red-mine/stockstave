@@ -11,6 +11,7 @@ class PortfoliosController < ApplicationController
     @rows = @portfolio.rows
     @tracked = @portfolio.tracked_plans(@today)
     @hindsight = @portfolio.plan_hindsight(@today)
+    @checklist = MonthlyChecklist.new(@portfolio, today: @today, fund_data: FundData.load, tracked: @tracked)
     @new_money = params[:new_money].to_s.delete(",").strip.presence
     return unless @new_money
 

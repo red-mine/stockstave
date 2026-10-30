@@ -1,0 +1,32 @@
+<%# This month's to-do list (MonthlyChecklist): actions first, then the
+    checks that came out fine. %>
+<% money = ->(v) { "¥#{number_with_delimiter(v.round(0).to_i)}" } %>
+<% sep = I18n.locale == :zh ? "、" : ", " %>
+<% text = lambda do |item|
+     a = item.args.dup
+     a[:amount] = money.(a[:amount]) if a.key?(:amount)
+     a[:names] = a[:names].join(sep) if a.key?(:names)
+     a[:date] ||= t("common.dash") if item.key == :fund_data_old
+     if item.key == :fund_flagged
+       a[:verdict] = t("funds.verdicts.#{a[:verdict]}")
+       a[:reason] = t("funds.reasons.#{a[:reason].key}", **a[:reason].args)
+     end
+     t("portfolio.checklist.items.#{item.key}", **a)
+   end %>
+<section class="panel portfolio-panel checklist" id="checklist" aria-labelledby="checklist-title">
+  <div class="panel-heading"><h2 id="checklist-title"><%= t("portfolio.checklist.title") %></h2></div>
+  <% if checklist.actions.empty? %>
+    <p class="checklist-quiet" id="checklist-quiet">
+      <strong><%= t("portfolio.checklist.quiet") %></strong>
+      <% if (next_on = checklist.next_event) %><%= t("portfolio.checklist.next", date: next_on.iso8601) %><% end %>
+    </p>
+  <% end %>
+  <ul class="checklist-items">
+    <% checklist.items.each do |item| %>
+      <li class="checklist-<%= item.level %>" data-key="<%= item.key %>">
+        <span class="checklist-mark" aria-hidden="true"><%= item.action? ? "☐" : "✓" %></span>
+        <span><%= text.(item) %></span>
+      </li>
+    <% end %>
+  </ul>
+</section>

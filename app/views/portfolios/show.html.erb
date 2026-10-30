@@ -14,6 +14,8 @@
   <% if notice %><p class="portfolio-flash is-notice" role="status"><%= notice %></p><% end %>
   <% if alert %><p class="portfolio-flash is-alert" role="alert"><%= alert %></p><% end %>
 
+  <%= render "portfolios/checklist", checklist: @checklist %>
+
   <% if @portfolio.empty? %>
     <p class="portfolio-status is-empty"><%= t("portfolio.status.empty") %></p>
   <% elsif @portfolio.needs_rebalance?(@today) %>

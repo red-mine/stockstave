@@ -439,6 +439,23 @@ zh:
       past: "已过 %{days} 天"
       running: "到这天累计到期"
       hint: "最后一列是到每个日期为止累计到期的金额：付款前确认它够用。定期存款提前支取，利息按活期算。"
+    checklist:
+      title: "本月待办"
+      quiet: "本月无需操作。"
+      next: "下一件事：%{date}。"
+      items:
+        debit: "%{name}：%{date} 扣款 %{amount}。"
+        keep_cash: "扣款账户里至少留 %{amount}。"
+        plan_done: "%{name}：已全部投完，决定是否开始新一轮定投。"
+        matured: "%{name}（%{amount}）已于 %{date} 到期：确认是否已自动续存，再更新到期日或金额。"
+        maturing: "%{name}（%{amount}）%{date} 到期：决定续存，还是转到要用钱的地方。"
+        rebalance: "比例偏离了，或者到了年度再平衡的时间：按下面表格里的操作调整。"
+        on_target: "比例正常，各类都在目标的 %{band} 个百分点以内。"
+        stale: "更新超过 %{days} 天没改的金额：%{names}。"
+        over_insured: "%{institution} 合计 %{amount}，超过存款保险上限：把超出部分转到另一家银行。"
+        fund_good: "%{code} %{name} 基金体检仍然合格。"
+        fund_flagged: "%{code} %{name} 现在是 %{verdict}：%{reason}到基金体检里找一只替代的。"
+        fund_data_old: "基金体检数据上次更新是 %{date}：运行 bin/rails funds:refresh，或检查每周的定时任务。"
     plans:
       title: "定投跟踪"
       empty: "还没有定投计划。把你在基金 App 里设的定投填进来，页面会自动算出它现在值多少。"

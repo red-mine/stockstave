@@ -441,6 +441,23 @@ en:
       past: "%{days} days ago"
       running: "Paid out by then"
       hint: "The last column adds up what has matured by each date: check that it covers each payment before it is due. An early withdrawal from a term deposit earns only demand-deposit interest."
+    checklist:
+      title: "This month"
+      quiet: "Nothing to do this month."
+      next: " Next: %{date}."
+      items:
+        debit: "%{name}: %{amount} is debited on %{date}."
+        keep_cash: "Keep at least %{amount} in the account the debits come from."
+        plan_done: "%{name}: every purchase is made; decide whether to start a new plan."
+        matured: "%{name} (%{amount}) matured on %{date}: check whether it was renewed, then update the date or the amount."
+        maturing: "%{name} (%{amount}) matures on %{date}: decide whether to renew it or move the money where it is needed."
+        rebalance: "The mix has drifted or the yearly rebalance is due: see the trades below."
+        on_target: "The mix is within %{band} points of its targets."
+        stale: "Update the amounts not changed for over %{days} days: %{names}."
+        over_insured: "%{institution} holds %{amount}, more than deposit insurance covers: move the excess to another bank."
+        fund_good: "%{code} %{name} still passes the fund checkup."
+        fund_flagged: "%{code} %{name} is now %{verdict}: %{reason} Look for a replacement in the fund checkup."
+        fund_data_old: "The fund checkup data was last fetched %{date}: run bin/rails funds:refresh, or check the weekly task."
     plans:
       title: "Auto-investment tracker"
       empty: "No plans yet. Add the monthly auto-investment you set up in your fund app; the page works out what it is worth from then on."

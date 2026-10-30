@@ -798,3 +798,11 @@ a { color: var(--teal-dark); }
 }
 .research-banner strong { color: var(--negative); }
 .research-banner a { font-weight: 750; white-space: nowrap; }
+
+/* This month's to-do list, top of the allocation page */
+.checklist .checklist-quiet { margin: 0; padding: 16px 26px 0; color: var(--positive); }
+.checklist-items { margin: 0; padding: 12px 26px 18px; list-style: none; line-height: 1.7; }
+.checklist-items li { display: flex; gap: 8px; }
+.checklist-action { color: var(--ink); font-weight: 650; }
+.checklist-ok { color: var(--muted); }
+.checklist-mark { flex: none; width: 1.2em; }
