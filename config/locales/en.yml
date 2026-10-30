@@ -10,6 +10,11 @@ en:
   app:
     name: "Stock Stave"
     tagline: "Trend, channel, and signal analysis across China’s major exchanges."
+  research_banner:
+    label: "Research finding"
+    title: "Tested: these signals do not work."
+    body: "Across every A share from 2012 to 2026, the buy and sell signals on this site did not predict what prices did next, and trading on them lost to the market after costs. The site is kept as a research exhibit; do not trade on it."
+    link: "Read the findings →"
   locale:
     label: "Language"
     switch_to_english: "Switch to English"
@@ -162,7 +167,7 @@ en:
       why_score_short: "Why this score"
       open_analysis: "Open analysis →"
       no_candidates: "No strongest-agreement candidates in this market today. Do not force a trade."
-    risk_note: "Agreement score ≠ expected return. Model shortlist only—not a guarantee or personalized financial advice."
+    risk_note: "Agreement score ≠ expected return. Tested on the whole market, these candidates did no better than any other stock. Not financial advice."
     status:
       model_date: "Model date"
       refresh_verified: "Refresh verified"

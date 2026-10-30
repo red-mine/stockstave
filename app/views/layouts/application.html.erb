@@ -12,6 +12,7 @@
 
   <body class="app-body">
     <%= render "layouts/locale_bar" %>
+    <%= render "layouts/research_banner" if controller_name == "stocks" %>
     <%= yield %>
   </body>
 </html>

@@ -4,7 +4,7 @@
 #   pwsh -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File bin\stop-portfolio.ps1
 
 $root = Split-Path -Parent $PSScriptRoot
-$pidFile = Join-Path $root "tmp\pids\server.pid"
+$pidFile = Join-Path $root "tmp\pids\portfolio.pid"
 
 Add-Type -AssemblyName PresentationFramework
 if (Test-Path $pidFile) {

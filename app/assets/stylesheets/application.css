@@ -788,3 +788,13 @@ a { color: var(--teal-dark); }
 .fund-reason-avoid { color: var(--negative); }
 .fund-reason-info { color: var(--ink); }
 .fund-footer { margin-top: 22px; padding: 0; }
+
+/* Research finding shown above every signal page */
+.research-banner {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px;
+  width: min(1480px, calc(100% - 40px)); margin: 14px auto 0; padding: 12px 16px;
+  border: 1px solid rgba(181, 71, 71, 0.35); border-radius: 12px;
+  color: var(--ink); background: rgba(181, 71, 71, 0.07); font-size: 0.86rem; line-height: 1.5;
+}
+.research-banner strong { color: var(--negative); }
+.research-banner a { font-weight: 750; white-space: nowrap; }

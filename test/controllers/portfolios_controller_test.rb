@@ -18,6 +18,7 @@ class PortfoliosControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", text: "My allocation"
     assert_select ".portfolio-status.is-empty"
+    assert_select "aside.research-banner", 0
   end
 
   test "added holdings show the mix and the trades back to target" do

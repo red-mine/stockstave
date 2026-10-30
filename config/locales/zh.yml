@@ -8,6 +8,11 @@ zh:
   app:
     name: "Stock Stave"
     tagline: "覆盖中国主要交易所的趋势、通道与信号分析。"
+  research_banner:
+    label: "研究结论"
+    title: "已检验：这些信号无效。"
+    body: "用 2012–2026 年全部 A 股检验，本站的买卖信号对之后的涨跌没有预测力，按信号交易扣费后跑输大盘。本站仅作为研究展示保留，请勿据此交易。"
+    link: "查看研究结论 →"
   locale:
     label: "语言"
     switch_to_english: "Switch to English"
@@ -160,7 +165,7 @@ zh:
       why_score_short: "为什么是这个分数"
       open_analysis: "打开分析 →"
       no_candidates: "今日该市场没有一致度最高的候选股，不要硬做交易。"
-    risk_note: "一致度分数不等于预期收益。这里只给出模型候选清单，既不是保证，也不构成个性化投资建议。"
+    risk_note: "一致度分数不等于预期收益。全市场检验显示，这些候选股之后的表现并不比其他股票好。不构成投资建议。"
     status:
       model_date: "模型日期"
       refresh_verified: "刷新已核验"

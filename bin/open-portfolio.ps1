@@ -5,10 +5,14 @@
 #
 # The server runs hidden; bin\stop-portfolio.ps1 stops it. Its log is
 # log\development.log.
+#
+# Port 3001 and its own pid file, never 3000: the public preview serves port
+# 3000 through a Cloudflare tunnel, and a development server there would put
+# these private pages on the public URL.
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
-$port = 3000
+$port = 3001
 $page = "http://localhost:$port/portfolio"
 
 function Test-Server {
@@ -22,12 +26,16 @@ function Test-Server {
 if (-not (Test-Server)) {
     # A server that died without cleaning up leaves its pid file behind, and
     # Rails then refuses to start, claiming one is already running.
-    $pidFile = Join-Path $root "tmp\pids\server.pid"
+    $pidFile = Join-Path $root "tmp\pids\portfolio.pid"
     if (Test-Path $pidFile) { Remove-Item $pidFile -Force }
 
     $ruby = (Get-Command ruby -ErrorAction SilentlyContinue)?.Source
     if (-not $ruby) { $ruby = "C:\Ruby34-x64\bin\ruby.exe" }
-    Start-Process -FilePath $ruby -ArgumentList "bin/rails", "server", "-p", "$port" `
+    # config/puma.rb reads PORT and PIDFILE and would otherwise claim the
+    # preview's port 3000 and its tmp\pids\server.pid.
+    $env:PORT = "$port"
+    $env:PIDFILE = "tmp/pids/portfolio.pid"
+    Start-Process -FilePath $ruby -ArgumentList "bin/rails", "server", "-b", "127.0.0.1", "-p", "$port" `
         -WorkingDirectory $root -WindowStyle Hidden
 
     $ready = $false

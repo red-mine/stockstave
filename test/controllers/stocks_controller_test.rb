@@ -87,6 +87,17 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
     assert_select "section#current-signals.signal-panel"
   end
 
+  test "signal pages say first that the signals were tested and do not work" do
+    Stock::Stave.stub(:new, ->(_area, _days) { FakeStave.new }) do
+      get stocks_by_area_path("sh")
+    end
+    assert_select "aside.research-banner", text: /these signals do not work/
+    assert_select "aside.research-banner a[href$='docs/conclusion.md']"
+
+    get signal_guide_path(area: Stock::SZSTK)
+    assert_select "aside.research-banner", 1
+  end
+
   test "market page displays the last successful daily refresh" do
     status = {
       state: "succeeded",
@@ -457,7 +468,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.candidate-open[href='#{stock_analysis_path("sz002653", area: Stock::SZSTK, return_to: "buy-candidates")}']", text: /Open analysis/
     assert_select ".data-status-recent", text: "Recent"
     assert_select "a.history-shortcut[href='#{signal_history_path(area: Stock::SZSTK)}']", text: /View signal history/
-    assert_select ".risk-note", text: /not a guarantee/
+    assert_select ".risk-note", text: /did no better than any other stock/
   end
 
   test "search results hide the market-wide buy shortlist" do

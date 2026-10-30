@@ -1,0 +1,8 @@
+<%# The signals this site shows were tested on the whole market (docs/
+    conclusion.md) and did not predict returns. The public preview keeps
+    showing them as a research exhibit, so every signal page says so first. %>
+<aside class="research-banner" role="note" aria-label="<%= t("research_banner.label") %>">
+  <strong><%= t("research_banner.title") %></strong>
+  <span><%= t("research_banner.body") %></span>
+  <%= link_to t("research_banner.link"), "https://github.com/red-mine/stockstave/blob/master/docs/conclusion.md", rel: "noopener" %>
+</aside>
