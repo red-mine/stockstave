@@ -492,7 +492,7 @@ en:
       each: "Each purchase"
       compare_rate: "Deposit rate to compare (% a year)"
       refresh: "Update dividend records"
-      hint: "An estimate from the ETF's closing prices and dividends, after a 0.12% purchase fee; your fund app's figure is the real one and may differ slightly. 110020 invests in 510310, 022430 in 512050."
+      hint: "An estimate from the ETF's closing prices and dividends, after a 0.12% purchase fee; your fund app's figure is the real one and may differ slightly. 110020, for example, invests in 510310; the fund checkup shows which index any other fund tracks."
     split:
       title: "Where should new money go?"
       label: "Amount to add (¥)"

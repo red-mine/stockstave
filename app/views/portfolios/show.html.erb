@@ -228,7 +228,7 @@
       <label><%= t("portfolio.plans.name") %><%= f.text_field :name, required: true, placeholder: t("portfolio.plans.name_example") %></label>
       <label><%= t("portfolio.plans.fund_code") %><%= f.text_field :fund_code, size: 8, placeholder: "110020" %></label>
       <label><%= t("portfolio.plans.proxy") %><%= f.text_field :proxy, required: true, size: 8, placeholder: "510310" %></label>
-      <label><%= t("portfolio.plans.amount") %><%= f.text_field :amount, required: true, inputmode: "decimal", size: 8, placeholder: "2800" %></label>
+      <label><%= t("portfolio.plans.amount") %><%= f.text_field :amount, required: true, inputmode: "decimal", size: 8, placeholder: "4200" %></label>
       <label><%= t("portfolio.plans.day") %><%= f.number_field :day, required: true, min: 1, max: 28, value: 10 %></label>
       <label><%= t("portfolio.plans.start_on") %><%= f.date_field :start_on, required: true, value: @today %></label>
       <label><%= t("portfolio.plans.months") %><%= f.number_field :months, required: true, min: 1, max: 600, value: 12 %></label>
